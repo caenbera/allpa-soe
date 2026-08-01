@@ -2,6 +2,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  updateDoc,
   collection,
   query,
   where,
@@ -42,6 +43,7 @@ export async function createCompanyForOwner(ownerUid: string, companyName: strin
     ownerUid,
     createdAt: serverTimestamp(),
     superadminAccessGrant: { granted: false, grantedAt: null, grantedBy: null },
+    superadminAccessRequest: null,
   };
 
   await setDoc(doc(db, "companies", companyId), company);
@@ -84,5 +86,31 @@ export async function listAllCompanies(): Promise<Company[]> {
   return snap.docs.map((d) => {
     const data = d.data();
     return { ...data, id: d.id, createdAt: toMillis(data.createdAt) } as Company;
+  });
+}
+
+/**
+ * El super administrador deja una solicitud de acceso — el otorgamiento real
+ * (superadminAccessGrant.granted) solo lo puede escribir el admin de la
+ * empresa, nunca el superadmin (así lo aplican las reglas de Firestore).
+ */
+export async function requestSuperadminAccess(companyId: string, requestedBy: string, note?: string) {
+  await updateDoc(doc(db, "companies", companyId), {
+    superadminAccessRequest: { requestedAt: Date.now(), requestedBy, note: note ?? "" },
+  });
+}
+
+/** Solo puede ejecutarlo el admin de la empresa (lo hacen cumplir las reglas de Firestore). */
+export async function grantSuperadminAccess(companyId: string, grantedBy: string) {
+  await updateDoc(doc(db, "companies", companyId), {
+    superadminAccessGrant: { granted: true, grantedAt: Date.now(), grantedBy },
+    superadminAccessRequest: null,
+  });
+}
+
+/** Solo puede ejecutarlo el admin de la empresa (lo hacen cumplir las reglas de Firestore). */
+export async function revokeSuperadminAccess(companyId: string) {
+  await updateDoc(doc(db, "companies", companyId), {
+    superadminAccessGrant: { granted: false, grantedAt: null, grantedBy: null },
   });
 }

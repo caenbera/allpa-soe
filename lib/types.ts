@@ -17,6 +17,12 @@ export interface SuperadminAccessGrant {
   note?: string;
 }
 
+export interface SuperadminAccessRequest {
+  requestedAt: number;
+  requestedBy: string;
+  note?: string;
+}
+
 export interface Company {
   id: string;
   name: string;
@@ -26,6 +32,7 @@ export interface Company {
   ownerUid: string;
   createdAt: number;
   superadminAccessGrant: SuperadminAccessGrant;
+  superadminAccessRequest: SuperadminAccessRequest | null;
 }
 
 export interface CompanyMember {

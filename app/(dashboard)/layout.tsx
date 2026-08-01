@@ -21,7 +21,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [loading, allowed, router]);
 
   useEffect(() => {
-    if (!loading && firebaseReady && role === "superadmin") router.replace("/superadmin");
+    if (!loading && firebaseReady && role === "superadmin") router.replace("/empresas");
   }, [loading, role, router]);
 
   if (loading || !allowed) {

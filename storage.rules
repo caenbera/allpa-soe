@@ -1,0 +1,16 @@
+rules_version = '2';
+
+// Archivos por empresa: companies/{companyId}/... (logos, adjuntos de checklist, etc.)
+// Solo miembros de la empresa pueden leer/escribir sus propios archivos.
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isCompanyMember(companyId) {
+      return request.auth != null &&
+        firestore.exists(/databases/(default)/documents/companies/$(companyId)/members/$(request.auth.uid));
+    }
+
+    match /companies/{companyId}/{allPaths=**} {
+      allow read, write: if isCompanyMember(companyId);
+    }
+  }
+}

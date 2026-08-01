@@ -1,0 +1,109 @@
+rules_version = '2';
+
+// Modelo de acceso de Allpa SOE:
+//  - Cada usuario pertenece como máximo a una empresa (users/{uid}.companyId).
+//  - Los datos de una empresa (bloques, páginas, secciones, checklist, notas)
+//    solo son legibles/editables por sus miembros (companies/{id}/members/{uid}).
+//  - El super administrador puede leer los metadatos de nivel raíz de
+//    cualquier empresa (para el panel global), pero NO las subcolecciones
+//    internas, salvo que esa empresa le haya otorgado acceso explícito
+//    (companies/{id}.superadminAccessGrant.granted == true).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function myProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isSuperadmin() {
+      return isSignedIn() && myProfile().role == 'superadmin';
+    }
+
+    function isCompanyMember(companyId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/companies/$(companyId)/members/$(request.auth.uid));
+    }
+
+    function isCompanyAdmin(companyId) {
+      return isCompanyMember(companyId) &&
+        get(/databases/$(database)/documents/companies/$(companyId)/members/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function hasSuperadminGrant(companyId) {
+      return get(/databases/$(database)/documents/companies/$(companyId)).data.superadminAccessGrant.granted == true;
+    }
+
+    function canReadCompanyData(companyId) {
+      return isCompanyMember(companyId) || (isSuperadmin() && hasSuperadminGrant(companyId));
+    }
+
+    // ── Usuarios ──
+    match /users/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || isSuperadmin());
+      allow write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // ── Empresas ──
+    match /companies/{companyId} {
+      // Metadatos de nivel raíz: miembros siempre, superadmin siempre (panel global,
+      // sin necesidad de grant — solo ve nombre/plan/conteo, no el contenido interno).
+      allow read: if isCompanyMember(companyId) || isSuperadmin();
+      allow create: if isSignedIn();
+      // El superadmin NUNCA puede escribir superadminAccessGrant (el otorgamiento es
+      // decisión exclusiva del admin de la empresa) — solo puede dejar una solicitud.
+      allow update: if isCompanyAdmin(companyId) ||
+        (isSuperadmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['superadminAccessRequest']));
+
+      match /members/{memberId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyAdmin(companyId);
+      }
+
+      match /blocks/{blockId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyAdmin(companyId);
+
+        match /pages/{pageId} {
+          allow read: if canReadCompanyData(companyId);
+          allow write: if isCompanyAdmin(companyId);
+        }
+      }
+
+      match /pages/{pageId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+
+        match /sections/{sectionId} {
+          allow read: if canReadCompanyData(companyId);
+          allow write: if isCompanyMember(companyId);
+
+          match /checklistItems/{itemId} {
+            allow read: if canReadCompanyData(companyId);
+            allow write: if isCompanyMember(companyId);
+
+            match /notes/{noteId} {
+              allow read: if canReadCompanyData(companyId);
+              allow create: if isCompanyMember(companyId) && request.resource.data.authorUid == request.auth.uid;
+              allow update, delete: if isCompanyMember(companyId) && resource.data.authorUid == request.auth.uid;
+            }
+          }
+        }
+      }
+    }
+
+    // ── Invitaciones ── (el documento se identifica por el token, que actúa
+    // como capacidad de acceso: solo quien tiene el enlace puede leerlo)
+    match /invitations/{token} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if isCompanyAdmin(request.resource.data.companyId);
+      allow update: if isSignedIn() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
+      allow delete: if isCompanyAdmin(resource.data.companyId);
+    }
+  }
+}

@@ -1,4 +1,14 @@
 import { defaultSidebarBlocks, type DefaultBlockConfig, type DefaultPageConfig } from "./default-sidebar";
+import type { SidebarBlock, SidebarPage } from "./types";
+
+function slugifyName(name: string) {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
 
 export interface NavNode {
   key: string;
@@ -37,6 +47,38 @@ function blockToNode(block: DefaultBlockConfig): NavNode {
 }
 
 export const navTree: NavNode[] = defaultSidebarBlocks.map(blockToNode);
+
+/**
+ * Convierte los bloques/páginas personalizados creados en Firestore (los que
+ * el admin agrega desde el sidebar) en nodos de navegación, para anexarlos
+ * después de los bloques por defecto. Sus páginas todavía no tienen una
+ * vista propia implementada, así que enlazan al estado "en camino" del
+ * catch-all hasta que se construya su contenido.
+ */
+export function customBlocksToNavNodes(blocks: SidebarBlock[], pagesByBlock: Record<string, SidebarPage[]>): NavNode[] {
+  return blocks.map((block) => {
+    const basePath = `/${slugifyName(block.name)}-${block.id.slice(0, 6)}`;
+    const pages = pagesByBlock[block.id] ?? [];
+    const children: NavNode[] = pages
+      .filter((p) => !p.parentPageId)
+      .map((p) => ({
+        key: `${basePath}/${p.slug}`,
+        name: p.name,
+        icon: p.icon,
+        href: `${basePath}/${p.slug}`,
+        built: false,
+        children: [],
+      }));
+    return {
+      key: block.id,
+      name: block.name,
+      icon: block.icon,
+      href: children.length ? null : basePath,
+      built: false,
+      children,
+    };
+  });
+}
 
 /** Devuelve las keys de todos los ancestros (incluida ella misma) de un nodo cuyo href coincide con `pathname`. */
 export function findActivePath(nodes: NavNode[], pathname: string, trail: string[] = []): string[] | null {

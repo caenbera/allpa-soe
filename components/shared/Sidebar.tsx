@@ -1,17 +1,22 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, PanelLeftClose, PanelLeftOpen, Plus, LogOut, ChevronsUpDown } from "lucide-react";
+import { LayoutDashboard, PanelLeftClose, PanelLeftOpen, Plus, LogOut, ChevronsUpDown, UserPlus } from "lucide-react";
 import { useUIStore } from "@/store/ui";
 import { useAuthStore } from "@/store/auth";
 import { brandLogos } from "@/lib/brand";
-import { navTree, findActivePath } from "@/lib/nav-tree";
+import { navTree as staticNavTree, findActivePath, customBlocksToNavNodes, type NavNode } from "@/lib/nav-tree";
 import { NavNodeRenderer, CollapsedNavIcons } from "@/components/shared/SidebarNavTree";
+import { CreateBlockModal } from "@/components/sidebar-builder/CreateBlockModal";
+import { InviteMemberModal } from "@/components/sidebar-builder/InviteMemberModal";
 import { logout } from "@/lib/auth-actions";
 import { firebaseReady } from "@/lib/firebase";
-import { toast } from "sonner";
+import { listBlocks, listPages } from "@/lib/services/sidebar";
+import { getCompany } from "@/lib/services/companies";
+import type { SidebarBlock, SidebarPage } from "@/lib/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,13 +27,53 @@ import {
 export function Sidebar() {
   const pathname = usePathname();
   const { sidebarCollapsed, toggleSidebarCollapsed, mobileSidebarOpen, setMobileSidebarOpen } = useUIStore();
-  const { user, role } = useAuthStore();
+  const { user, role, companyId } = useAuthStore();
+  const [customBlocks, setCustomBlocks] = useState<SidebarBlock[]>([]);
+  const [customPagesByBlock, setCustomPagesByBlock] = useState<Record<string, SidebarPage[]>>({});
+  const [modalOpen, setModalOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [companyName, setCompanyName] = useState("Tu empresa");
+
+  const loadCustomBlocks = async (id: string) => {
+    const blocks = await listBlocks(id);
+    const custom = blocks.filter((b) => !b.isDefault);
+    const entries = await Promise.all(custom.map(async (b) => [b.id, await listPages(id, b.id)] as const));
+    return { custom, pagesByBlock: Object.fromEntries(entries) };
+  };
+
+  const refetchCustomBlocks = async () => {
+    if (!firebaseReady || !companyId) return;
+    const { custom, pagesByBlock } = await loadCustomBlocks(companyId);
+    setCustomBlocks(custom);
+    setCustomPagesByBlock(pagesByBlock);
+  };
+
+  useEffect(() => {
+    if (!firebaseReady || !companyId) return;
+    let cancelled = false;
+    loadCustomBlocks(companyId).then(({ custom, pagesByBlock }) => {
+      if (cancelled) return;
+      setCustomBlocks(custom);
+      setCustomPagesByBlock(pagesByBlock);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [companyId]);
+
+  useEffect(() => {
+    if (!firebaseReady || !companyId) return;
+    getCompany(companyId).then((c) => c && setCompanyName(c.name));
+  }, [companyId]);
+
+  const navTree: NavNode[] = useMemo(
+    () => [...staticNavTree, ...customBlocksToNavNodes(customBlocks, customPagesByBlock)],
+    [customBlocks, customPagesByBlock]
+  );
   const activeTrail = findActivePath(navTree, pathname) ?? [];
 
   const displayName = user?.displayName ?? (firebaseReady ? "Cuenta" : "Modo demo");
   const roleLabel = role === "superadmin" ? "Super administrador" : role === "member" ? "Miembro" : "Administrador";
-
-  const handleNewBlock = () => toast.info("El constructor de bloques se habilita en el siguiente paso.");
 
   const content = (
     <div className={`flex h-full flex-col bg-[var(--sidebar)] text-[var(--sidebar-foreground)]`}>
@@ -106,7 +151,7 @@ export function Sidebar() {
             {role !== "member" && (
               <button
                 type="button"
-                onClick={handleNewBlock}
+                onClick={() => setModalOpen(true)}
                 className="flex w-full items-center gap-2 rounded-lg border border-dashed border-white/15 px-2.5 py-2 text-sm text-white/45 transition-colors hover:border-[var(--sidebar-primary)]/50 hover:text-[var(--sidebar-primary)]"
               >
                 <Plus className="h-4 w-4" />
@@ -139,6 +184,12 @@ export function Sidebar() {
             )}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
+            {role !== "member" && (
+              <DropdownMenuItem onClick={() => setInviteOpen(true)}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Invitar miembro
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={() => logout().catch(() => undefined)} className="text-red-500 focus:text-red-500">
               <LogOut className="mr-2 h-4 w-4" />
               Cerrar sesión
@@ -167,6 +218,24 @@ export function Sidebar() {
           <aside className="absolute inset-y-0 left-0 w-72">{content}</aside>
         </div>
       )}
+
+      <CreateBlockModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        companyId={companyId}
+        uid={user?.uid ?? null}
+        nextOrder={staticNavTree.length + customBlocks.length}
+        onCreated={() => refetchCustomBlocks().catch(() => undefined)}
+      />
+
+      <InviteMemberModal
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+        companyId={companyId}
+        companyName={companyName}
+        uid={user?.uid ?? null}
+        inviterName={displayName}
+      />
     </>
   );
 }

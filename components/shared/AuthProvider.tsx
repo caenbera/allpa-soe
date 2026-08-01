@@ -6,6 +6,7 @@ import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db, firebaseReady } from "@/lib/firebase";
 import { useAuthStore } from "@/store/auth";
 import { createCompanyForOwner } from "@/lib/services/companies";
+import { seedDefaultSidebar } from "@/lib/services/sidebar";
 import type { UserRole } from "@/lib/types";
 
 interface ResolvedProfile {
@@ -28,6 +29,7 @@ async function ensureUserDoc(user: User): Promise<ResolvedProfile> {
   // Perfil ausente (p.ej. alta manual en Firebase Auth): se crea una
   // empresa propia por defecto para que el usuario nunca quede huérfano.
   const company = await createCompanyForOwner(user.uid, user.displayName ?? "Mi empresa");
+  await seedDefaultSidebar(company.id, user.uid);
   await setDoc(ref, {
     uid: user.uid,
     email: user.email,

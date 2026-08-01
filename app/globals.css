@@ -1,0 +1,203 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ── Allpa SOE — Design Tokens ── */
+/* Sistema Operativo Empresarial: negro/carbón + dorado premium */
+:root {
+  /* GOLD — acentos, botones primarios, badges premium */
+  --allpa-gold-100: #fdf0cf;
+  --allpa-gold-200: #f5da93;
+  --allpa-gold-300: #eec469;
+  --allpa-gold-400: #e0a836;
+  --allpa-gold-500: #c98f1f;
+  --allpa-gold-600: #a9760f;
+  --allpa-gold-700: #7a560d;
+
+  /* NAVY — fondos, tarjetas, sidebar (tema oscuro por defecto) */
+  --allpa-navy-950: #06070c;
+  --allpa-navy-900: #0a0e1a;
+  --allpa-navy-800: #0f1424;
+  --allpa-navy-700: #141b2e;
+  --allpa-navy-600: #1b2438;
+  --allpa-navy-500: #253048;
+  --allpa-navy-border: rgba(238, 196, 105, 0.14);
+
+  /* CREAM — fondos claros (tema claro) */
+  --allpa-cream-50: #faf7f0;
+  --allpa-cream-100: #f4ede0;
+  --allpa-cream-200: #ece0c9;
+
+  /* Semantic status */
+  --allpa-success: #22c55e;
+  --allpa-warning: #eab308;
+  --allpa-info: #3b82f6;
+  --allpa-danger: #ef4444;
+  --allpa-violet: #a78bfa;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: "Fraunces", Georgia, serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-serif);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-success: var(--allpa-success);
+  --color-warning: var(--allpa-warning);
+  --color-info: var(--allpa-info);
+  --color-gold: var(--allpa-gold-400);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* Light theme — secondary, cream/gold */
+:root {
+  --background: var(--allpa-cream-50);
+  --foreground: #1c1408;
+  --card: #ffffff;
+  --card-foreground: #1c1408;
+  --popover: #ffffff;
+  --popover-foreground: #1c1408;
+  --primary: var(--allpa-gold-500);
+  --primary-foreground: #1c1408;
+  --secondary: var(--allpa-cream-200);
+  --secondary-foreground: #4a3a1c;
+  --muted: var(--allpa-cream-100);
+  --muted-foreground: #78684a;
+  --accent: var(--allpa-gold-100);
+  --accent-foreground: #4a3a1c;
+  --destructive: var(--allpa-danger);
+  --border: rgba(120, 90, 30, 0.16);
+  --input: rgba(120, 90, 30, 0.20);
+  --ring: var(--allpa-gold-500);
+  --chart-1: var(--allpa-gold-400);
+  --chart-2: var(--allpa-success);
+  --chart-3: var(--allpa-info);
+  --chart-4: var(--allpa-violet);
+  --chart-5: var(--allpa-gold-600);
+  --radius: 0.75rem;
+  --sidebar: var(--allpa-navy-900);
+  --sidebar-foreground: var(--allpa-cream-100);
+  --sidebar-primary: var(--allpa-gold-400);
+  --sidebar-primary-foreground: var(--allpa-navy-950);
+  --sidebar-accent: rgba(238, 196, 105, 0.1);
+  --sidebar-accent-foreground: var(--allpa-gold-200);
+  --sidebar-border: var(--allpa-navy-border);
+  --sidebar-ring: var(--allpa-gold-400);
+}
+
+/* Dark theme — identidad principal de Allpa SOE (negro/dorado premium) */
+.dark {
+  --background: var(--allpa-navy-900);
+  --foreground: #f3ecd9;
+  --card: var(--allpa-navy-800);
+  --card-foreground: #f3ecd9;
+  --popover: var(--allpa-navy-700);
+  --popover-foreground: #f3ecd9;
+  --primary: var(--allpa-gold-400);
+  --primary-foreground: #241a05;
+  --secondary: var(--allpa-navy-600);
+  --secondary-foreground: #f3ecd9;
+  --muted: var(--allpa-navy-700);
+  --muted-foreground: #9aa3b8;
+  --accent: rgba(238, 196, 105, 0.12);
+  --accent-foreground: var(--allpa-gold-200);
+  --destructive: var(--allpa-danger);
+  --border: var(--allpa-navy-border);
+  --input: rgba(238, 196, 105, 0.16);
+  --ring: var(--allpa-gold-400);
+  --chart-1: var(--allpa-gold-400);
+  --chart-2: var(--allpa-success);
+  --chart-3: var(--allpa-info);
+  --chart-4: var(--allpa-violet);
+  --chart-5: var(--allpa-gold-600);
+  --sidebar: var(--allpa-navy-950);
+  --sidebar-foreground: var(--allpa-cream-100);
+  --sidebar-primary: var(--allpa-gold-400);
+  --sidebar-primary-foreground: var(--allpa-navy-950);
+  --sidebar-accent: rgba(238, 196, 105, 0.1);
+  --sidebar-accent-foreground: var(--allpa-gold-200);
+  --sidebar-border: var(--allpa-navy-border);
+  --sidebar-ring: var(--allpa-gold-400);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "cv11";
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+@layer utilities {
+  .font-serif {
+    font-family: var(--font-serif);
+  }
+
+  /* Divisor dorado decorativo */
+  .divider-gold {
+    height: 2px;
+    width: 44px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--allpa-gold-400), var(--allpa-gold-600));
+  }
+
+  /* Tarjeta premium — usada en acordeones, paneles laterales */
+  .surface-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 12px 28px rgba(0, 0, 0, 0.24);
+  }
+
+  /* Textura sutil de fondo para el shell de la app (solo tema oscuro) */
+  .dark .app-shell-texture {
+    background-image: radial-gradient(circle at 12% 0%, rgba(238, 196, 105, 0.06), transparent 42rem),
+      radial-gradient(circle at 100% 20%, rgba(167, 139, 250, 0.04), transparent 38rem);
+  }
+}

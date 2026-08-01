@@ -1,4 +1,5 @@
-import { PageShell, MetaStrip } from "@/components/page-blocks/PageShell";
+import { PageShell } from "@/components/page-blocks/PageShell";
+import { MetaBar } from "@/components/page-blocks/MetaBar";
 import { AccordionSection, AddSectionButton, type AccordionSectionData } from "@/components/page-blocks/AccordionSection";
 
 const sections: AccordionSectionData[] = [
@@ -63,12 +64,12 @@ const sections: AccordionSectionData[] = [
 export function HomepageView() {
   return (
     <PageShell title="Homepage" description="Planificación y estructura de la página principal del sitio web." status="en_progreso">
-      <MetaStrip
-        items={[
-          { label: "Progreso total", value: "62%" },
-          { label: "Responsable", value: "Ana Torres" },
-          { label: "Fecha objetivo", value: "30 jun 2026" },
-          { label: "Prioridad", value: "Alta" },
+      <MetaBar
+        initialFields={[
+          { id: "progreso_total", value: 62 },
+          { id: "responsable", value: "Ana Torres" },
+          { id: "fecha_objetivo", value: "2026-06-30" },
+          { id: "prioridad", value: "alta" },
         ]}
       />
       {sections.map((s) => (

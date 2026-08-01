@@ -1,7 +1,8 @@
 "use client";
 
 import { Mic, Scissors, Clapperboard, Rows3, Mail, Video, FileText, FileSpreadsheet } from "lucide-react";
-import { PageShell, MetaStrip } from "@/components/page-blocks/PageShell";
+import { PageShell } from "@/components/page-blocks/PageShell";
+import { MetaBar } from "@/components/page-blocks/MetaBar";
 import { AccordionSection, AddSectionButton, type AccordionSectionData } from "@/components/page-blocks/AccordionSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -145,13 +146,12 @@ export function PodcastProduccionView() {
         </TabsList>
 
         <TabsContent value="resumen" className="mt-4">
-          <MetaStrip
-            items={[
-              { label: "Estado general", value: "En producción" },
-              { label: "Progreso total", value: "65%" },
-              { label: "Fecha de grabación", value: "28 may" },
-              { label: "Fecha de publicación", value: "4 jun" },
-              { label: "Responsable", value: "Ana Torres" },
+          <MetaBar
+            initialFields={[
+              { id: "estado_general", value: "en_progreso" },
+              { id: "progreso_total", value: 65 },
+              { id: "fecha_objetivo", value: "2026-05-28" },
+              { id: "responsable", value: "Ana Torres" },
             ]}
           />
           <RepurposeFlow />

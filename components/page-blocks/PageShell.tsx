@@ -6,19 +6,6 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/page-blocks/StatusBadge";
 import type { SectionStatus } from "@/lib/types";
 
-export function MetaStrip({ items }: { items: { label: string; value: React.ReactNode }[] }) {
-  return (
-    <div className="surface-card mb-5 grid grid-cols-2 gap-4 px-5 py-4 sm:grid-cols-3 lg:grid-cols-6">
-      {items.map((item) => (
-        <div key={item.label} className="min-w-0">
-          <p className="text-[11px] uppercase tracking-wide text-white/35">{item.label}</p>
-          <div className="mt-1 truncate text-sm font-medium text-[#f3ecd9]">{item.value}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export function PageShell({
   title,
   description,

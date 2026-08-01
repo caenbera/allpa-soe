@@ -1,7 +1,7 @@
 import { Camera, FileText, FileSpreadsheet, FileImage, Plus } from "lucide-react";
-import { PageShell, MetaStrip } from "@/components/page-blocks/PageShell";
+import { PageShell, StatCard } from "@/components/page-blocks/PageShell";
+import { MetaBar } from "@/components/page-blocks/MetaBar";
 import { AccordionSection, AddSectionButton, type AccordionSectionData } from "@/components/page-blocks/AccordionSection";
-import { StatCard } from "@/components/page-blocks/PageShell";
 
 const sections: AccordionSectionData[] = [
   {
@@ -85,12 +85,13 @@ export function InstagramView() {
       status="en_progreso"
       sidePanel={<SidePanel />}
     >
-      <MetaStrip
-        items={[
-          { label: "Progreso total", value: "72%" },
-          { label: "Responsable", value: "Ana Torres" },
-          { label: "Fecha del plan", value: "1 – 31 may" },
-          { label: "Frecuencia", value: "4 pub/semana" },
+      <MetaBar
+        initialFields={[
+          { id: "progreso_total", value: 72 },
+          { id: "responsable", value: "Ana Torres" },
+          { id: "plataforma", value: "instagram" },
+          { id: "frecuencia", value: "4 publicaciones/semana" },
+          { id: "fecha_objetivo", value: "2026-05-31" },
         ]}
       />
       {sections.map((s) => (

@@ -1,4 +1,5 @@
-import { PageShell, MetaStrip } from "@/components/page-blocks/PageShell";
+import { PageShell } from "@/components/page-blocks/PageShell";
+import { MetaBar } from "@/components/page-blocks/MetaBar";
 import { AccordionSection, AddSectionButton, type AccordionSectionData } from "@/components/page-blocks/AccordionSection";
 
 const sections: AccordionSectionData[] = [
@@ -54,14 +55,14 @@ export function BlogEnProduccionView() {
       description="Artículo educativo sobre los fundamentos para crecer sin perder el control de la operación."
       status="en_progreso"
     >
-      <MetaStrip
-        items={[
-          { label: "Progreso total", value: "68%" },
-          { label: "Responsable", value: "Luis Peña" },
-          { label: "Fecha objetivo", value: "25 may 2026" },
-          { label: "Categoría", value: "Educación" },
-          { label: "Palabras objetivo", value: "1800 – 2200" },
-          { label: "Estado SEO", value: "Optimizado" },
+      <MetaBar
+        initialFields={[
+          { id: "progreso_total", value: 68 },
+          { id: "responsable", value: "Luis Peña" },
+          { id: "fecha_objetivo", value: "2026-05-25" },
+          { id: "categoria", value: "Educación" },
+          { id: "palabra_objetivo", value: "1800 – 2200" },
+          { id: "estado_seo", value: "Optimizado" },
         ]}
       />
       {sections.map((s) => (

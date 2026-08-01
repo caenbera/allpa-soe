@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, LogOut, ShieldCheck } from "lucide-react";
+import { Building2, LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
 import { brandLogos } from "@/lib/brand";
 import { useAuthStore } from "@/store/auth";
 import { logout } from "@/lib/auth-actions";
@@ -49,6 +49,16 @@ export function SuperadminSidebar() {
             </Link>
           );
         })}
+
+        <div className="my-2 h-px bg-[var(--sidebar-border)]" />
+
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-[var(--sidebar-primary)] transition-colors hover:bg-white/5"
+        >
+          <LayoutDashboard className="h-4 w-4 flex-shrink-0" />
+          Ver mi panel de empresa
+        </Link>
       </nav>
 
       <div className="border-t border-[var(--sidebar-border)] p-3">

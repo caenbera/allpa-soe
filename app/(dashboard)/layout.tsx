@@ -9,7 +9,7 @@ import { Topbar } from "@/components/shared/Topbar";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { user, role, loading } = useAuthStore();
+  const { user, loading } = useAuthStore();
 
   // Sin proyecto de Firebase configurado (desarrollo local) se permite
   // entrar en modo demo para poder construir y previsualizar el panel;
@@ -19,10 +19,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     if (!loading && !allowed) router.replace("/login");
   }, [loading, allowed, router]);
-
-  useEffect(() => {
-    if (!loading && firebaseReady && role === "superadmin") router.replace("/empresas");
-  }, [loading, role, router]);
 
   if (loading || !allowed) {
     return <div className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">Cargando…</div>;

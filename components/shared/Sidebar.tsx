@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, PanelLeftClose, PanelLeftOpen, Plus, LogOut, ChevronsUpDown, UserPlus } from "lucide-react";
+import { LayoutDashboard, PanelLeftClose, PanelLeftOpen, Plus, LogOut, ChevronsUpDown, UserPlus, ShieldCheck } from "lucide-react";
 import { useUIStore } from "@/store/ui";
 import { useAuthStore } from "@/store/auth";
 import { brandLogos } from "@/lib/brand";
@@ -122,6 +122,15 @@ export function Sidebar() {
             >
               <LayoutDashboard className="h-[18px] w-[18px]" />
             </Link>
+            {role === "superadmin" && (
+              <Link
+                href="/empresas"
+                className="flex h-10 w-10 items-center justify-center rounded-xl text-[var(--sidebar-primary)] transition-colors hover:bg-white/5"
+                title="Panel de Super Administrador"
+              >
+                <ShieldCheck className="h-[18px] w-[18px]" />
+              </Link>
+            )}
             <CollapsedNavIcons nodes={navTree} onExpand={toggleSidebarCollapsed} />
           </div>
         ) : (
@@ -138,6 +147,15 @@ export function Sidebar() {
                 <LayoutDashboard className="h-4 w-4 flex-shrink-0" />
                 Dashboard
               </Link>
+              {role === "superadmin" && (
+                <Link
+                  href="/empresas"
+                  className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-[var(--sidebar-primary)] transition-colors hover:bg-white/5"
+                >
+                  <ShieldCheck className="h-4 w-4 flex-shrink-0" />
+                  Panel de Super Administrador
+                </Link>
+              )}
             </div>
 
             <div className="h-px bg-[var(--sidebar-border)]" />

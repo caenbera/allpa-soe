@@ -1,0 +1,88 @@
+import {
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  serverTimestamp,
+  Timestamp,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import type { Company, CompanyMember } from "@/lib/types";
+
+function slugify(name: string) {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .slice(0, 48);
+}
+
+function toMillis(value: unknown): number {
+  if (value instanceof Timestamp) return value.toMillis();
+  if (typeof value === "number") return value;
+  return Date.now();
+}
+
+/** Crea una empresa nueva y registra al usuario que la crea como su admin. */
+export async function createCompanyForOwner(ownerUid: string, companyName: string): Promise<Company> {
+  const companyId = doc(collection(db, "companies")).id;
+  const baseSlug = slugify(companyName) || companyId.slice(0, 8);
+
+  const company: Omit<Company, "createdAt"> & { createdAt: unknown } = {
+    id: companyId,
+    name: companyName,
+    slug: baseSlug,
+    logoURL: null,
+    plan: "free",
+    ownerUid,
+    createdAt: serverTimestamp(),
+    superadminAccessGrant: { granted: false, grantedAt: null, grantedBy: null },
+  };
+
+  await setDoc(doc(db, "companies", companyId), company);
+
+  const member: Omit<CompanyMember, "joinedAt"> & { joinedAt: unknown } = {
+    uid: ownerUid,
+    role: "admin",
+    permissions: ["*"],
+    invitedBy: null,
+    joinedAt: serverTimestamp(),
+  };
+  await setDoc(doc(db, "companies", companyId, "members", ownerUid), member);
+
+  return { ...company, createdAt: Date.now() } as Company;
+}
+
+export async function getCompany(companyId: string): Promise<Company | null> {
+  const snap = await getDoc(doc(db, "companies", companyId));
+  if (!snap.exists()) return null;
+  const data = snap.data();
+  return {
+    ...data,
+    id: snap.id,
+    createdAt: toMillis(data.createdAt),
+  } as Company;
+}
+
+export async function listCompaniesByOwner(ownerUid: string): Promise<Company[]> {
+  const q = query(collection(db, "companies"), where("ownerUid", "==", ownerUid));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => {
+    const data = d.data();
+    return { ...data, id: d.id, createdAt: toMillis(data.createdAt) } as Company;
+  });
+}
+
+/** Solo para el panel de super administrador: metadatos de todas las empresas, sin subcolecciones internas. */
+export async function listAllCompanies(): Promise<Company[]> {
+  const snap = await getDocs(collection(db, "companies"));
+  return snap.docs.map((d) => {
+    const data = d.data();
+    return { ...data, id: d.id, createdAt: toMillis(data.createdAt) } as Company;
+  });
+}

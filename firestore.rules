@@ -60,7 +60,13 @@ service cloud.firestore {
 
       match /members/{memberId} {
         allow read: if canReadCompanyData(companyId);
-        allow write: if isCompanyAdmin(companyId);
+        // Bootstrap: el dueño de una empresa recién creada todavía no tiene su
+        // propio doc de member, así que isCompanyAdmin() aún no puede ser true.
+        // Se le permite crear (solo) su propio doc de member como admin.
+        allow create: if isCompanyAdmin(companyId) ||
+          (isSignedIn() && request.auth.uid == memberId &&
+           get(/databases/$(database)/documents/companies/$(companyId)).data.ownerUid == request.auth.uid);
+        allow update, delete: if isCompanyAdmin(companyId);
       }
 
       match /blocks/{blockId} {

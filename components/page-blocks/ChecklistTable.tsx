@@ -1,11 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { MessageSquare, Plus, MoreHorizontal, Send } from "lucide-react";
+import { MessageSquare, Plus, MoreHorizontal, Pencil, Send, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { StatusBadge } from "@/components/page-blocks/StatusBadge";
 import type { SectionStatus } from "@/lib/types";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export interface DemoNote {
   id: string;
@@ -72,23 +78,53 @@ function NotesPopover({ item }: { item: DemoChecklistItem }) {
   );
 }
 
-export function ChecklistTable({ items: initialItems }: { items: DemoChecklistItem[] }) {
-  const [items, setItems] = useState(initialItems);
+/**
+ * Tabla de checklist controlada: el estado vive en AccordionSection para que
+ * el contador del encabezado (hechas/total) siempre refleje altas, bajas y
+ * cambios de estado de las tareas.
+ */
+export function ChecklistTable({
+  items,
+  onItemsChange,
+}: {
+  items: DemoChecklistItem[];
+  onItemsChange: (updater: (list: DemoChecklistItem[]) => DemoChecklistItem[]) => void;
+}) {
   const [newTask, setNewTask] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draftText, setDraftText] = useState("");
 
   const toggleDone = (id: string) => {
-    setItems((list) =>
+    onItemsChange((list) =>
       list.map((it) => (it.id === id ? { ...it, status: it.status === "completado" ? "pendiente" : "completado" } : it))
     );
   };
 
   const addTask = () => {
     if (!newTask.trim()) return;
-    setItems((list) => [
+    onItemsChange((list) => [
       ...list,
       { id: `${Date.now()}`, text: newTask.trim(), status: "pendiente", assignee: "Sin asignar", dueDate: "—", notes: [] },
     ]);
     setNewTask("");
+  };
+
+  const startEdit = (item: DemoChecklistItem) => {
+    setEditingId(item.id);
+    setDraftText(item.text);
+  };
+
+  const commitEdit = (id: string) => {
+    const text = draftText.trim();
+    if (text) {
+      onItemsChange((list) => list.map((it) => (it.id === id ? { ...it, text } : it)));
+    }
+    setEditingId(null);
+  };
+
+  const deleteTask = (id: string) => {
+    onItemsChange((list) => list.filter((it) => it.id !== id));
+    if (editingId === id) setEditingId(null);
   };
 
   return (
@@ -111,7 +147,23 @@ export function ChecklistTable({ items: initialItems }: { items: DemoChecklistIt
               <td className="py-2.5">
                 <Checkbox checked={item.status === "completado"} onCheckedChange={() => toggleDone(item.id)} />
               </td>
-              <td className={`py-2.5 pr-3 ${item.status === "completado" ? "text-white/40 line-through" : "text-white/85"}`}>{item.text}</td>
+              <td className="py-2.5 pr-3">
+                {editingId === item.id ? (
+                  <input
+                    autoFocus
+                    value={draftText}
+                    onChange={(e) => setDraftText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") commitEdit(item.id);
+                      if (e.key === "Escape") setEditingId(null);
+                    }}
+                    onBlur={() => commitEdit(item.id)}
+                    className="h-7 w-full rounded-md border border-input bg-transparent px-2 text-sm text-white/85 outline-none focus:border-[#eec469]"
+                  />
+                ) : (
+                  <span className={item.status === "completado" ? "text-white/40 line-through" : "text-white/85"}>{item.text}</span>
+                )}
+              </td>
               <td className="py-2.5 pr-3">
                 <StatusBadge status={item.status} interactive={false} />
               </td>
@@ -121,9 +173,21 @@ export function ChecklistTable({ items: initialItems }: { items: DemoChecklistIt
               <td className="py-2.5 pr-3 text-white/65">{item.assignee}</td>
               <td className="py-2.5 pr-3 text-white/50">{item.dueDate}</td>
               <td className="py-2.5">
-                <button type="button" className="text-white/30 hover:text-white/60">
-                  <MoreHorizontal className="h-4 w-4" />
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="text-white/30 transition-colors hover:text-white/60" aria-label="Opciones de la tarea">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-36">
+                    <DropdownMenuItem onClick={() => startEdit(item)}>
+                      <Pencil className="mr-2 h-3.5 w-3.5" />
+                      Editar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => deleteTask(item.id)} className="text-red-500 focus:text-red-500">
+                      <Trash2 className="mr-2 h-3.5 w-3.5" />
+                      Eliminar
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </td>
             </tr>
           ))}

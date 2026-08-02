@@ -1,8 +1,13 @@
+"use client";
+
+import { useState } from "react";
 import { PageShell } from "@/components/page-blocks/PageShell";
 import { MetaBar } from "@/components/page-blocks/MetaBar";
 import { AccordionSection, AddSectionButton, type AccordionSectionData } from "@/components/page-blocks/AccordionSection";
+import { CreateSectionDialog } from "@/components/page-blocks/CreateSectionDialog";
+import { useSectionsState } from "@/lib/use-sections";
 
-const sections: AccordionSectionData[] = [
+const initialSections: AccordionSectionData[] = [
   {
     id: "hero",
     title: "Hero Principal",
@@ -62,8 +67,16 @@ const sections: AccordionSectionData[] = [
 ];
 
 export function HomepageView() {
+  const { sections, addSection, removeSection } = useSectionsState(initialSections);
+  const [createOpen, setCreateOpen] = useState(false);
+
   return (
-    <PageShell title="Homepage" description="Planificación y estructura de la página principal del sitio web." status="en_progreso">
+    <PageShell
+      title="Homepage"
+      description="Planificación y estructura de la página principal del sitio web."
+      status="en_progreso"
+      onNewBlock={() => setCreateOpen(true)}
+    >
       <MetaBar
         initialFields={[
           { id: "progreso_total", value: 62 },
@@ -73,9 +86,10 @@ export function HomepageView() {
         ]}
       />
       {sections.map((s) => (
-        <AccordionSection key={s.id} data={s} />
+        <AccordionSection key={s.id} data={s} onDelete={() => removeSection(s.id)} />
       ))}
-      <AddSectionButton />
+      <AddSectionButton onClick={() => setCreateOpen(true)} />
+      <CreateSectionDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addSection} />
     </PageShell>
   );
 }

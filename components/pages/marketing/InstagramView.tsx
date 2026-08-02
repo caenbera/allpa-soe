@@ -1,9 +1,14 @@
+"use client";
+
+import { useState } from "react";
 import { Camera, FileText, FileSpreadsheet, FileImage, Plus } from "lucide-react";
 import { PageShell, StatCard } from "@/components/page-blocks/PageShell";
 import { MetaBar } from "@/components/page-blocks/MetaBar";
 import { AccordionSection, AddSectionButton, type AccordionSectionData } from "@/components/page-blocks/AccordionSection";
+import { CreateSectionDialog } from "@/components/page-blocks/CreateSectionDialog";
+import { useSectionsState } from "@/lib/use-sections";
 
-const sections: AccordionSectionData[] = [
+const initialSections: AccordionSectionData[] = [
   {
     id: "estrategia",
     title: "1. Estrategia y Planificación",
@@ -78,12 +83,16 @@ function SidePanel() {
 }
 
 export function InstagramView() {
+  const { sections, addSection, removeSection } = useSectionsState(initialSections);
+  const [createOpen, setCreateOpen] = useState(false);
+
   return (
     <PageShell
       title="Instagram — Plan de Contenido"
       description="Planificación, creación y publicación de contenido para Instagram."
       status="en_progreso"
       sidePanel={<SidePanel />}
+      onNewBlock={() => setCreateOpen(true)}
     >
       <MetaBar
         initialFields={[
@@ -95,9 +104,10 @@ export function InstagramView() {
         ]}
       />
       {sections.map((s) => (
-        <AccordionSection key={s.id} data={s} />
+        <AccordionSection key={s.id} data={s} onDelete={() => removeSection(s.id)} />
       ))}
-      <AddSectionButton />
+      <AddSectionButton onClick={() => setCreateOpen(true)} />
+      <CreateSectionDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addSection} />
     </PageShell>
   );
 }

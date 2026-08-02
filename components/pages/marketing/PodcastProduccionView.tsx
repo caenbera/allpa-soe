@@ -1,12 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { Mic, Scissors, Clapperboard, Rows3, Mail, Video, FileText, FileSpreadsheet } from "lucide-react";
 import { PageShell } from "@/components/page-blocks/PageShell";
 import { MetaBar } from "@/components/page-blocks/MetaBar";
 import { AccordionSection, AddSectionButton, type AccordionSectionData } from "@/components/page-blocks/AccordionSection";
+import { CreateSectionDialog } from "@/components/page-blocks/CreateSectionDialog";
+import { useSectionsState } from "@/lib/use-sections";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const sections: AccordionSectionData[] = [
+const initialSections: AccordionSectionData[] = [
   {
     id: "guion",
     title: "1. Guion y Contenido",
@@ -116,12 +119,16 @@ function SidePanel() {
 }
 
 export function PodcastProduccionView() {
+  const { sections, addSection, removeSection } = useSectionsState(initialSections);
+  const [createOpen, setCreateOpen] = useState(false);
+
   return (
     <PageShell
       title="Ep. 24 — Lo que casi nadie te cuenta sobre escalar"
       description="Conversación con una operadora experimentada sobre los errores que frenan el crecimiento."
       status="en_progreso"
       sidePanel={<SidePanel />}
+      onNewBlock={() => setCreateOpen(true)}
     >
       <Tabs defaultValue="resumen" className="mb-5">
         <TabsList className="h-auto flex-wrap bg-transparent p-0">
@@ -156,9 +163,10 @@ export function PodcastProduccionView() {
           />
           <RepurposeFlow />
           {sections.map((s) => (
-            <AccordionSection key={s.id} data={s} />
+            <AccordionSection key={s.id} data={s} onDelete={() => removeSection(s.id)} />
           ))}
-          <AddSectionButton />
+          <AddSectionButton onClick={() => setCreateOpen(true)} />
+          <CreateSectionDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addSection} />
         </TabsContent>
 
         {["guion", "invitado", "produccion", "promocion", "publicacion", "analitica", "archivos"].map((tab) => (

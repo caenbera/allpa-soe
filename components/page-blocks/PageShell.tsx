@@ -11,12 +11,14 @@ export function PageShell({
   description,
   status,
   sidePanel,
+  onNewBlock,
   children,
 }: {
   title: string;
   description: string;
   status: SectionStatus;
   sidePanel?: React.ReactNode;
+  onNewBlock?: () => void;
   children: React.ReactNode;
 }) {
   const [starred, setStarred] = useState(false);
@@ -47,7 +49,10 @@ export function PageShell({
           <Button variant="outline" size="icon" className="h-9 w-9 border-white/12 bg-white/[0.03] text-white/70 hover:bg-white/[0.06]">
             <MoreHorizontal className="h-4 w-4" />
           </Button>
-          <Button className="border-0 bg-gradient-to-b from-[#f5da93] to-[#c98f1f] font-semibold text-[#241a05] hover:brightness-105">
+          <Button
+            onClick={onNewBlock}
+            className="border-0 bg-gradient-to-b from-[#f5da93] to-[#c98f1f] font-semibold text-[#241a05] hover:brightness-105"
+          >
             <Plus className="mr-1.5 h-4 w-4" />
             Nuevo Bloque
           </Button>

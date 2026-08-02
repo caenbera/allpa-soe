@@ -1,8 +1,13 @@
+"use client";
+
+import { useState } from "react";
 import { PageShell } from "@/components/page-blocks/PageShell";
 import { MetaBar } from "@/components/page-blocks/MetaBar";
 import { AccordionSection, AddSectionButton, type AccordionSectionData } from "@/components/page-blocks/AccordionSection";
+import { CreateSectionDialog } from "@/components/page-blocks/CreateSectionDialog";
+import { useSectionsState } from "@/lib/use-sections";
 
-const sections: AccordionSectionData[] = [
+const initialSections: AccordionSectionData[] = [
   {
     id: "investigacion",
     title: "1. Investigación y Planificación",
@@ -49,11 +54,15 @@ const sections: AccordionSectionData[] = [
 ];
 
 export function BlogEnProduccionView() {
+  const { sections, addSection, removeSection } = useSectionsState(initialSections);
+  const [createOpen, setCreateOpen] = useState(false);
+
   return (
     <PageShell
       title="Los 5 errores más comunes al escalar tu operación"
       description="Artículo educativo sobre los fundamentos para crecer sin perder el control de la operación."
       status="en_progreso"
+      onNewBlock={() => setCreateOpen(true)}
     >
       <MetaBar
         initialFields={[
@@ -66,9 +75,10 @@ export function BlogEnProduccionView() {
         ]}
       />
       {sections.map((s) => (
-        <AccordionSection key={s.id} data={s} />
+        <AccordionSection key={s.id} data={s} onDelete={() => removeSection(s.id)} />
       ))}
-      <AddSectionButton />
+      <AddSectionButton onClick={() => setCreateOpen(true)} />
+      <CreateSectionDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addSection} />
     </PageShell>
   );
 }

@@ -8,6 +8,10 @@ import { CentroContenidoView } from "@/components/pages/contenido/CentroContenid
 import { EpisodiosMadreView } from "@/components/pages/contenido/EpisodiosMadreView";
 import { ContenidoDerivadoView } from "@/components/pages/contenido/ContenidoDerivadoView";
 import { BibliotecaMultimediaView } from "@/components/pages/contenido/BibliotecaMultimediaView";
+import { CalendarioMaestroView } from "@/components/pages/contenido/CalendarioMaestroView";
+import { TemasEstrategicosView } from "@/components/pages/contenido/TemasEstrategicosView";
+import { AcademiaView } from "@/components/pages/contenido/AcademiaView";
+import { RecursosDescargablesView } from "@/components/pages/contenido/RecursosDescargablesView";
 
 /** Mapa ruta → componente para las páginas internas ya construidas. */
 export const pageRegistry: Record<string, ComponentType> = {
@@ -18,7 +22,11 @@ export const pageRegistry: Record<string, ComponentType> = {
   "/marketing/podcast/invitados": InvitadosView,
 
   "/contenido/centro-de-contenido": CentroContenidoView,
+  "/contenido/calendario-maestro": CalendarioMaestroView,
+  "/contenido/temas-estrategicos": TemasEstrategicosView,
   "/contenido/episodios-madre": EpisodiosMadreView,
   "/contenido/contenido-derivado": ContenidoDerivadoView,
+  "/contenido/academia": AcademiaView,
   "/contenido/biblioteca-multimedia": BibliotecaMultimediaView,
+  "/contenido/recursos-descargables": RecursosDescargablesView,
 };

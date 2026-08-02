@@ -5,6 +5,11 @@ import { InfoCard, type InfoRow } from "@/components/page-blocks/blocks/InfoCard
 import { FileList, type FileEntry } from "@/components/page-blocks/blocks/FileList";
 import { ChecklistPanel, type ChecklistLine } from "@/components/page-blocks/blocks/ChecklistPanel";
 import { NotesPanel, type NoteEntry } from "@/components/page-blocks/blocks/NotesPanel";
+import { FlowStrip, type FlowStep } from "@/components/page-blocks/blocks/FlowStrip";
+import { AssetProgressGrid, type AssetCard } from "@/components/page-blocks/blocks/AssetProgressGrid";
+import { PersonCard, type PersonInfo } from "@/components/page-blocks/blocks/PersonCard";
+import { Timeline, type TimelineStep } from "@/components/page-blocks/blocks/Timeline";
+import { MediaPreview, type MediaInfo } from "@/components/page-blocks/blocks/MediaPreview";
 import type { BlockInstance, BlockType } from "@/lib/block-types";
 
 export interface BlockRegistryEntry {
@@ -62,5 +67,39 @@ export const blockRegistry: Partial<Record<BlockType, BlockRegistryEntry>> = {
   },
   "notes-panel": {
     render: (block) => <NotesPanel notes={(block.config as NoteEntry[]) ?? []} />,
+  },
+  "flow-strip": {
+    render: (block) => {
+      const cfg = block.config as { steps: FlowStep[]; progressValue?: number; progressLabel?: string } | null;
+      return cfg?.steps?.length ? (
+        <FlowStrip steps={cfg.steps} progressValue={cfg.progressValue} progressLabel={cfg.progressLabel} />
+      ) : (
+        EMPTY_HINT
+      );
+    },
+  },
+  "asset-progress": {
+    render: (block) => {
+      const assets = (block.config as AssetCard[]) ?? [];
+      return assets.length ? <AssetProgressGrid assets={assets} /> : EMPTY_HINT;
+    },
+  },
+  "person-card": {
+    render: (block) => {
+      const person = block.config as PersonInfo | null;
+      return person ? <PersonCard person={person} /> : EMPTY_HINT;
+    },
+  },
+  timeline: {
+    render: (block) => {
+      const steps = (block.config as TimelineStep[]) ?? [];
+      return steps.length ? <Timeline steps={steps} /> : EMPTY_HINT;
+    },
+  },
+  "media-preview": {
+    render: (block) => {
+      const media = block.config as MediaInfo | null;
+      return media ? <MediaPreview media={media} /> : EMPTY_HINT;
+    },
   },
 };

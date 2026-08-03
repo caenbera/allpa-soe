@@ -79,6 +79,41 @@ service cloud.firestore {
         }
       }
 
+      // ── Módulo Contenido ──
+      // Mismas reglas para todas sus colecciones: las lee cualquiera con
+      // acceso a la empresa y las edita cualquier miembro.
+      match /pillars/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /episodes/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /derivedContent/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /mediaAssets/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /academyClasses/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /downloadables/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+
+      // Personalización de cada página: características visibles y bloques
+      // agregados por el administrador.
+      match /pageConfig/{pageKey} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+
       match /pages/{pageId} {
         allow read: if canReadCompanyData(companyId);
         allow write: if isCompanyMember(companyId);

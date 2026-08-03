@@ -6,11 +6,13 @@ import { PageShell, PageTabs } from "@/components/page-blocks/PageShell";
 import { BlockFrame } from "@/components/page-blocks/BlockFrame";
 import { AddBlockButton, AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
 import { BlockRenderer } from "@/components/page-blocks/BlockRenderer";
+import { EmptyState, LoadingState } from "@/components/page-blocks/EmptyState";
 import { DonutChart } from "@/components/page-blocks/blocks/DonutChart";
 import { FilterToolbar } from "@/components/page-blocks/blocks/FilterToolbar";
 import { Button } from "@/components/ui/button";
-import { useBlocksState } from "@/lib/use-blocks";
-import { EPISODES, PILLARS, STATUS_TONE, pillarOf, type Episode, type EpisodeStatus } from "@/components/pages/contenido/mock-data";
+import { useContent } from "@/lib/use-content";
+import { usePageConfig } from "@/lib/use-page-config";
+import { CONTENT_COLLECTIONS, type Episode, type EpisodeStatus, type Pillar } from "@/lib/content-types";
 
 const MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
@@ -29,8 +31,7 @@ const STATUS_PILL: Record<EpisodeStatus, string> = {
   Pausado: "bg-white/8 text-white/50",
 };
 
-function WeekCard({ episode }: { episode: Episode }) {
-  const pillar = pillarOf(episode.pillarId);
+function WeekCard({ episode, pillar }: { episode: Episode; pillar?: Pillar }) {
   const [starred, setStarred] = useState(false);
 
   return (
@@ -73,14 +74,19 @@ export function CalendarioMaestroView() {
   const [quarter, setQuarter] = useState("todo");
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<Record<string, string>>({});
-  const [year, setYear] = useState(2027);
+  const [year, setYear] = useState(new Date().getFullYear());
   const [createOpen, setCreateOpen] = useState(false);
-  const { blocks, addBlock, updateBlock, removeBlock } = useBlocksState([]);
+
+  const episodes = useContent<Episode>(CONTENT_COLLECTIONS.episodes);
+  const pillars = useContent<Pillar>(CONTENT_COLLECTIONS.pillars);
+  const { blocks, addBlock, updateBlock, removeBlock } = usePageConfig("/contenido/calendario-maestro");
+
+  const pillarOf = (id: string | null) => pillars.items.find((p) => p.id === id);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     const range: Record<string, [number, number]> = { q1: [1, 13], q2: [14, 26], q3: [27, 39], q4: [40, 52] };
-    return EPISODES.filter((ep) => {
+    return episodes.items.filter((ep) => {
       if (quarter !== "todo") {
         const [from, to] = range[quarter];
         if (ep.week < from || ep.week > to) return false;
@@ -89,7 +95,8 @@ export function CalendarioMaestroView() {
       if (!q) return true;
       return `${ep.title} ${ep.guest}`.toLowerCase().includes(q);
     });
-  }, [quarter, search, filters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [episodes.items, pillars.items, quarter, search, filters]);
 
   /** Cada semana cae en el mes que le corresponde (4-5 semanas por mes). */
   const byMonth = useMemo(() => {
@@ -103,53 +110,55 @@ export function CalendarioMaestroView() {
     return map;
   }, [filtered]);
 
-  const pillarSlices = PILLARS.map((p) => ({
-    id: p.id,
-    label: p.name,
-    value: EPISODES.filter((e) => e.pillarId === p.id).length,
-    color: p.color,
-  })).filter((s) => s.value > 0);
+  const pillarSlices = pillars.items
+    .map((p) => ({ id: p.id, label: p.name, value: episodes.items.filter((e) => e.pillarId === p.id).length, color: p.color }))
+    .filter((s) => s.value > 0);
+
+  const loading = episodes.loading || pillars.loading;
+  const isEmpty = !loading && episodes.items.length === 0;
 
   const sidePanel = (
     <>
-      <BlockFrame title="Resumen del Plan Anual" icon="PieChart">
-        <DonutChart slices={pillarSlices} centerValue={String(EPISODES.length)} centerLabel="Semanas planificadas" />
-      </BlockFrame>
+      {!isEmpty && (
+        <>
+          <BlockFrame title="Resumen del Plan Anual" icon="PieChart">
+            <DonutChart slices={pillarSlices} centerValue={String(episodes.items.length)} centerLabel="Semanas planificadas" />
+          </BlockFrame>
 
-      <BlockFrame title="Estado general" icon="Activity">
-        <ul className="space-y-2.5 text-sm">
-          {(Object.keys(STATUS_TONE) as EpisodeStatus[]).map((s) => {
-            const n = EPISODES.filter((e) => e.status === s).length;
-            return (
-              <li key={s} className="flex items-center gap-2">
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_PILL[s]}`}>{s}</span>
-                <span className="ml-auto tabular-nums font-medium text-white/85">{n}</span>
-                <span className="w-12 text-right tabular-nums text-white/35">
-                  {((n / EPISODES.length) * 100).toFixed(1)}%
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      </BlockFrame>
+          <BlockFrame title="Estado general" icon="Activity">
+            <ul className="space-y-2.5 text-sm">
+              {(Object.keys(STATUS_PILL) as EpisodeStatus[]).map((s) => {
+                const n = episodes.items.filter((e) => e.status === s).length;
+                return (
+                  <li key={s} className="flex items-center gap-2">
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_PILL[s]}`}>{s}</span>
+                    <span className="ml-auto tabular-nums font-medium text-white/85">{n}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </BlockFrame>
 
-      <BlockFrame title="Próximas semanas" icon="CalendarClock">
-        <ul className="space-y-3">
-          {EPISODES.filter((e) => e.status !== "Publicado")
-            .slice(0, 3)
-            .map((ep) => (
-              <li key={ep.id} className="flex items-start gap-2.5">
-                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--allpa-gold-400)]/12 text-xs font-semibold text-[var(--allpa-gold-300)]">
-                  {String(ep.week).padStart(2, "0")}
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-sm text-white/80">{ep.title}</span>
-                  <span className="block text-xs text-white/35">{ep.publishDate}</span>
-                </span>
-              </li>
-            ))}
-        </ul>
-      </BlockFrame>
+          <BlockFrame title="Próximas semanas" icon="CalendarClock">
+            <ul className="space-y-3">
+              {episodes.items
+                .filter((e) => e.status !== "Publicado")
+                .slice(0, 3)
+                .map((ep) => (
+                  <li key={ep.id} className="flex items-start gap-2.5">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--allpa-gold-400)]/12 text-xs font-semibold text-[var(--allpa-gold-300)]">
+                      {String(ep.week).padStart(2, "0")}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm text-white/80">{ep.title}</span>
+                      <span className="block text-xs text-white/35">{ep.publishDate}</span>
+                    </span>
+                  </li>
+                ))}
+            </ul>
+          </BlockFrame>
+        </>
+      )}
 
       {blocks.map((block) => (
         <BlockRenderer
@@ -202,57 +211,77 @@ export function CalendarioMaestroView() {
         </>
       }
     >
-      <BlockFrame title="Pilares del plan" icon="Target">
-        <div className="flex flex-wrap items-center gap-3">
-          {PILLARS.map((p) => (
-            <span key={p.id} className="flex items-center gap-1.5 text-xs text-white/60">
-              <span className="h-2 w-2 rounded-full" style={{ background: p.color }} />
-              {p.name}
-            </span>
-          ))}
+      {loading ? (
+        <div className="surface-card">
+          <LoadingState />
         </div>
-      </BlockFrame>
-
-      <div className="surface-card overflow-hidden">
-        <div className="px-4 pt-3">
-          <PageTabs tabs={QUARTER_TABS} active={quarter} onChange={setQuarter} />
+      ) : isEmpty ? (
+        <div className="surface-card">
+          <EmptyState
+            icon="CalendarDays"
+            title="Tu calendario está vacío"
+            description="Planifica tu año semana a semana: cada una es un episodio madre con su invitado, su pilar estratégico y sus activos derivados."
+            actionLabel="Nueva Semana"
+            onAction={() => undefined}
+          />
         </div>
-        <div className="px-4 pb-4">
-          <div className="mb-4">
-            <FilterToolbar
-              search={search}
-              onSearchChange={setSearch}
-              searchPlaceholder="Buscar por tema o invitado..."
-              filters={[{ id: "pillar", label: "Pilar", options: PILLARS.map((p) => p.name) }]}
-              values={filters}
-              onFilterChange={(id, value) => setFilters((f) => ({ ...f, [id]: value }))}
-            />
-          </div>
-
-          {byMonth.size === 0 ? (
-            <p className="py-10 text-center text-sm text-white/35">No hay semanas que coincidan con los filtros.</p>
-          ) : (
-            <div className="space-y-6">
-              {Array.from(byMonth.entries())
-                .sort((a, b) => a[0] - b[0])
-                .map(([month, weeks]) => (
-                  <div key={month}>
-                    <p className="mb-2.5 text-sm font-semibold text-[#f3ecd9]">{MONTHS[month]}</p>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-                      {weeks.map((ep) => (
-                        <WeekCard key={ep.id} episode={ep} />
-                      ))}
-                    </div>
-                  </div>
+      ) : (
+        <>
+          {pillars.items.length > 0 && (
+            <BlockFrame title="Pilares del plan" icon="Target">
+              <div className="flex flex-wrap items-center gap-3">
+                {pillars.items.map((p) => (
+                  <span key={p.id} className="flex items-center gap-1.5 text-xs text-white/60">
+                    <span className="h-2 w-2 rounded-full" style={{ background: p.color }} />
+                    {p.name}
+                  </span>
                 ))}
-            </div>
+              </div>
+            </BlockFrame>
           )}
 
-          <p className="mt-5 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-xs text-white/45">
-            Cada semana representa un episodio madre y sus activos derivados. Haz clic en cualquier tarjeta para ver los detalles completos.
-          </p>
-        </div>
-      </div>
+          <div className="surface-card overflow-hidden">
+            <div className="px-4 pt-3">
+              <PageTabs tabs={QUARTER_TABS} active={quarter} onChange={setQuarter} />
+            </div>
+            <div className="px-4 pb-4">
+              <div className="mb-4">
+                <FilterToolbar
+                  search={search}
+                  onSearchChange={setSearch}
+                  searchPlaceholder="Buscar por tema o invitado..."
+                  filters={[{ id: "pillar", label: "Pilar", options: pillars.items.map((p) => p.name) }]}
+                  values={filters}
+                  onFilterChange={(id, value) => setFilters((f) => ({ ...f, [id]: value }))}
+                />
+              </div>
+
+              {byMonth.size === 0 ? (
+                <p className="py-10 text-center text-sm text-white/35">No hay semanas que coincidan con los filtros.</p>
+              ) : (
+                <div className="space-y-6">
+                  {Array.from(byMonth.entries())
+                    .sort((a, b) => a[0] - b[0])
+                    .map(([month, weeks]) => (
+                      <div key={month}>
+                        <p className="mb-2.5 text-sm font-semibold text-[#f3ecd9]">{MONTHS[month]}</p>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+                          {weeks.map((ep) => (
+                            <WeekCard key={ep.id} episode={ep} pillar={pillarOf(ep.pillarId)} />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+
+              <p className="mt-5 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-xs text-white/45">
+                Cada semana representa un episodio madre y sus activos derivados. Haz clic en cualquier tarjeta para ver los detalles completos.
+              </p>
+            </div>
+          </div>
+        </>
+      )}
 
       <AddBlockDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addBlock} />
     </PageShell>

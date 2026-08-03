@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowLeft, Check, Plus } from "lucide-react";
 import { PageShell, PageTabs } from "@/components/page-blocks/PageShell";
 import { BlockFrame } from "@/components/page-blocks/BlockFrame";
 import { AddBlockButton, AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
 import { BlockRenderer } from "@/components/page-blocks/BlockRenderer";
+import { EmptyState, LoadingState } from "@/components/page-blocks/EmptyState";
 import { MetaBar } from "@/components/page-blocks/MetaBar";
-import { KpiStrip } from "@/components/page-blocks/blocks/KpiStrip";
 import { DonutChart } from "@/components/page-blocks/blocks/DonutChart";
 import { InfoCard } from "@/components/page-blocks/blocks/InfoCard";
 import { FileList } from "@/components/page-blocks/blocks/FileList";
@@ -19,10 +19,10 @@ import { PersonCard } from "@/components/page-blocks/blocks/PersonCard";
 import { Timeline } from "@/components/page-blocks/blocks/Timeline";
 import { MediaPreview } from "@/components/page-blocks/blocks/MediaPreview";
 import { RichTextEditor } from "@/components/page-blocks/RichTextEditor";
-import { BarChart, FunnelChart } from "@/components/page-blocks/blocks/Charts";
 import { Button } from "@/components/ui/button";
-import { useBlocksState } from "@/lib/use-blocks";
-import * as D from "@/components/pages/contenido/centro-data";
+import { useContent } from "@/lib/use-content";
+import { usePageConfig } from "@/lib/use-page-config";
+import { CONTENT_COLLECTIONS, type Episode, type Pillar } from "@/lib/content-types";
 
 const TABS = [
   { value: "resumen", label: "Resumen", icon: "LayoutDashboard" },
@@ -33,10 +33,38 @@ const TABS = [
   { value: "metricas", label: "Métricas", icon: "BarChart3" },
 ];
 
+/** Aviso reutilizable cuando una sección del episodio aún no tiene contenido. */
+function NotYet({ what }: { what: string }) {
+  return <p className="py-6 text-center text-sm text-white/35">Todavía no hay {what} para este episodio.</p>;
+}
+
 export function CentroContenidoView() {
   const [tab, setTab] = useState("resumen");
   const [createOpen, setCreateOpen] = useState(false);
-  const { blocks, addBlock, updateBlock, removeBlock } = useBlocksState([]);
+
+  const episodes = useContent<Episode>(CONTENT_COLLECTIONS.episodes);
+  const pillars = useContent<Pillar>(CONTENT_COLLECTIONS.pillars);
+  const { metaFields, updateMetaFields, blocks, addBlock, updateBlock, removeBlock } = usePageConfig(
+    "/contenido/centro-de-contenido",
+    [
+      { id: "progreso_total", value: 0 },
+      { id: "responsable", value: "Sin asignar" },
+      { id: "fecha_objetivo", value: new Date().toISOString().slice(0, 10) },
+      { id: "prioridad", value: "media" },
+    ]
+  );
+
+  /** Se muestra el episodio con detalle; si ninguno lo tiene, el primero en producción. */
+  const episode = useMemo(() => {
+    const withDetail = episodes.items.find((e) => e.detail);
+    if (withDetail) return withDetail;
+    return episodes.items.find((e) => e.status === "En producción") ?? episodes.items[0] ?? null;
+  }, [episodes.items]);
+
+  const detail = episode?.detail ?? null;
+  const pillar = pillars.items.find((p) => p.id === episode?.pillarId);
+
+  const loading = episodes.loading || pillars.loading;
 
   const extraBlocks = (
     <>
@@ -52,24 +80,57 @@ export function CentroContenidoView() {
     </>
   );
 
+  if (loading) {
+    return (
+      <PageShell title="Centro de Contenido" icon="LayoutDashboard" starrable={false}>
+        <div className="surface-card">
+          <LoadingState />
+        </div>
+      </PageShell>
+    );
+  }
+
+  if (!episode) {
+    return (
+      <PageShell
+        title="Centro de Contenido"
+        description="El detalle completo de cada semana: episodio madre, activos derivados, notas, clase y métricas."
+        icon="LayoutDashboard"
+        starrable={false}
+      >
+        <div className="surface-card">
+          <EmptyState
+            icon="LayoutDashboard"
+            title="Todavía no hay semanas que mostrar"
+            description="El Centro de Contenido reúne todo el trabajo de una semana en un solo lugar. Crea tu primer episodio madre desde el Calendario Maestro para empezar."
+          />
+        </div>
+        <AddBlockDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addBlock} />
+      </PageShell>
+    );
+  }
+
   const sidePanel = (
     <>
       <BlockFrame title="Ecosistema de Contenido" icon="PieChart">
         <p className="mb-3 text-xs text-white/40">Progreso de activos derivados de este episodio</p>
-        <DonutChart slices={D.ECOSYSTEM_SLICES} centerValue="78%" centerLabel="Completado" showPercent={false} />
+        <DonutChart
+          slices={[
+            { id: "done", label: "Completado", value: episode.assetsDone, color: "#22c55e" },
+            { id: "left", label: "Pendiente", value: Math.max(0, episode.assetsTotal - episode.assetsDone), color: "#94a3b8" },
+          ].filter((s) => s.value > 0)}
+          centerValue={`${episode.progress}%`}
+          centerLabel="Completado"
+          showPercent={false}
+        />
       </BlockFrame>
 
       <BlockFrame title="Notas rápidas" icon="StickyNote">
-        <NotesPanel notes={D.QUICK_NOTES} />
+        <NotesPanel notes={detail?.quickNotes ?? []} />
       </BlockFrame>
 
       <BlockFrame title="Recursos y Documentos" icon="FileText">
-        <FileList files={D.RESOURCES} />
-      </BlockFrame>
-
-      <BlockFrame title="Métricas Proyectadas" icon="TrendingUp">
-        <InfoCard rows={D.PROJECTED_METRICS} />
-        <p className="mt-3 text-[11px] text-white/30">Las métricas reales se actualizarán después de la publicación.</p>
+        {detail?.resources?.length ? <FileList files={detail.resources} /> : <NotYet what="recursos" />}
       </BlockFrame>
 
       {extraBlocks}
@@ -78,8 +139,8 @@ export function CentroContenidoView() {
 
   return (
     <PageShell
-      title={D.WEEK.title}
-      description={D.WEEK.description}
+      title={episode.title}
+      description={detail?.description ?? episode.subtitle}
       status="en_progreso"
       sidePanel={tab === "resumen" ? sidePanel : undefined}
       headerActions={
@@ -96,54 +157,76 @@ export function CentroContenidoView() {
       }
     >
       <p className="-mt-2 mb-3 text-sm font-medium text-[var(--allpa-gold-300)]">
-        Semana {D.WEEK.number} · {D.WEEK.episode} · {D.WEEK.dates}
+        Semana {episode.week}
+        {detail?.episodeLabel ? ` · ${detail.episodeLabel}` : ""}
+        {detail?.dates ? ` · ${detail.dates}` : ""}
+        {pillar ? ` · ${pillar.name}` : ""}
       </p>
 
-      <MetaBar
-        initialFields={[
-          { id: "progreso_total", value: 78 },
-          { id: "responsable", value: "Diana Bermeo" },
-          { id: "fecha_objetivo", value: "2027-03-22" },
-          { id: "categoria", value: "Educación" },
-          { id: "prioridad", value: "alta" },
-        ]}
-      />
+      <MetaBar fields={metaFields} onFieldsChange={updateMetaFields} />
 
       <PageTabs tabs={TABS} active={tab} onChange={setTab} />
 
       {tab === "resumen" && (
         <>
-          <BlockFrame title="Invitada" icon="UserRound">
-            <PersonCard person={D.GUEST} />
+          <BlockFrame title="Invitado" icon="UserRound">
+            {detail?.guest ? (
+              <PersonCard person={detail.guest} />
+            ) : (
+              <PersonCard person={{ name: episode.guest, role: episode.guestRole }} />
+            )}
           </BlockFrame>
 
           <BlockFrame title="Resumen del Episodio" icon="FileText">
-            <p className="text-sm leading-relaxed text-white/60">{D.WEEK.description}</p>
-            <p className="mb-2 mt-4 text-[11px] font-semibold uppercase tracking-wide text-white/35">Puntos clave</p>
-            <ul className="space-y-1.5">
-              {D.KEY_POINTS.map((p) => (
-                <li key={p} className="flex items-start gap-2 text-sm text-white/70">
-                  <Check className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-emerald-400" />
-                  {p}
-                </li>
-              ))}
-            </ul>
+            <p className="text-sm leading-relaxed text-white/60">{detail?.description ?? episode.subtitle}</p>
+            {detail?.keyPoints?.length ? (
+              <>
+                <p className="mb-2 mt-4 text-[11px] font-semibold uppercase tracking-wide text-white/35">Puntos clave</p>
+                <ul className="space-y-1.5">
+                  {detail.keyPoints.map((p) => (
+                    <li key={p} className="flex items-start gap-2 text-sm text-white/70">
+                      <Check className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-emerald-400" />
+                      {p}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : null}
           </BlockFrame>
 
           <BlockFrame title="Información General" icon="ClipboardList">
-            <InfoCard rows={D.GENERAL_INFO} />
+            {detail?.generalInfo?.length ? (
+              <InfoCard rows={detail.generalInfo} />
+            ) : (
+              <InfoCard
+                rows={[
+                  { label: "Estado", value: episode.status },
+                  { label: "Semana", value: String(episode.week) },
+                  { label: "Invitado", value: episode.guest, person: true },
+                  { label: "Publicación", value: episode.publishDate },
+                ]}
+              />
+            )}
           </BlockFrame>
 
           <BlockFrame title="Distribución y Activos Generados" icon="Workflow">
-            <FlowStrip steps={D.DISTRIBUTION_FLOW} progressValue={78} progressLabel="78% completado (7/9 fases)" />
+            {detail?.distributionFlow?.length ? (
+              <FlowStrip
+                steps={detail.distributionFlow}
+                progressValue={episode.progress}
+                progressLabel={`${episode.progress}% completado (${episode.assetsDone}/${episode.assetsTotal} activos)`}
+              />
+            ) : (
+              <NotYet what="activos derivados" />
+            )}
           </BlockFrame>
 
           <BlockFrame title="Próximos Pasos" icon="ListChecks">
-            <ChecklistPanel lines={D.NEXT_STEPS} />
+            {detail?.nextSteps?.length ? <ChecklistPanel lines={detail.nextSteps} /> : <NotYet what="tareas pendientes" />}
           </BlockFrame>
 
           <BlockFrame title="Línea de Tiempo del Episodio" icon="GitCommitHorizontal">
-            <Timeline steps={D.TIMELINE} />
+            {detail?.timeline?.length ? <Timeline steps={detail.timeline} /> : <NotYet what="hitos" />}
           </BlockFrame>
         </>
       )}
@@ -153,57 +236,65 @@ export function CentroContenidoView() {
           <div className="min-w-0 space-y-3">
             <BlockFrame title="Información del Episodio" icon="Mic">
               <p className="mb-1 text-[11px] uppercase tracking-wide text-white/35">Título del episodio</p>
-              <p className="mb-4 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white/85">{D.WEEK.title}</p>
+              <p className="mb-4 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white/85">{episode.title}</p>
               <p className="mb-1 text-[11px] uppercase tracking-wide text-white/35">Descripción</p>
-              <p className="mb-4 text-sm leading-relaxed text-white/60">{D.WEEK.description}</p>
-              <p className="mb-2 text-[11px] uppercase tracking-wide text-white/35">Palabras clave SEO</p>
-              <div className="flex flex-wrap gap-1.5">
-                {D.SEO_KEYWORDS.map((k) => (
-                  <span key={k} className="rounded-full bg-white/8 px-2.5 py-1 text-xs text-white/60">
-                    {k}
-                  </span>
-                ))}
-              </div>
+              <p className="mb-4 text-sm leading-relaxed text-white/60">{detail?.description ?? episode.subtitle}</p>
+              {detail?.seoKeywords?.length ? (
+                <>
+                  <p className="mb-2 text-[11px] uppercase tracking-wide text-white/35">Palabras clave SEO</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {detail.seoKeywords.map((k) => (
+                      <span key={k} className="rounded-full bg-white/8 px-2.5 py-1 text-xs text-white/60">
+                        {k}
+                      </span>
+                    ))}
+                  </div>
+                </>
+              ) : null}
             </BlockFrame>
 
             <BlockFrame title="Grabación del Episodio" icon="AudioLines">
               <MediaPreview
                 media={{
                   kind: "audio",
-                  title: `Episodio 12 – ${D.WEEK.title}`,
+                  title: `Episodio ${episode.week} – ${episode.title}`,
                   duration: "48:32",
-                  meta: "Grabado el 15 mar 2027 · Estudio Principal",
+                  meta: detail ? "Grabado el 15 mar 2027 · Estudio Principal" : "Aún no hay grabación cargada.",
                   actions: true,
                 }}
               />
             </BlockFrame>
 
             <BlockFrame title="Notas del Episodio" icon="NotebookPen">
-              <ul className="space-y-1.5">
-                {D.EPISODE_NOTES.map((n) => (
-                  <li key={n} className="flex items-start gap-2 text-sm text-white/65">
-                    <span className="mt-1.5 h-1 w-1 flex-shrink-0 rounded-full bg-[var(--allpa-gold-400)]" />
-                    {n}
-                  </li>
-                ))}
-              </ul>
+              {detail?.episodeNotes?.length ? (
+                <ul className="space-y-1.5">
+                  {detail.episodeNotes.map((n) => (
+                    <li key={n} className="flex items-start gap-2 text-sm text-white/65">
+                      <span className="mt-1.5 h-1 w-1 flex-shrink-0 rounded-full bg-[var(--allpa-gold-400)]" />
+                      {n}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <NotYet what="notas" />
+              )}
             </BlockFrame>
 
             {extraBlocks}
           </div>
 
           <div className="space-y-3">
-            <BlockFrame title="Invitada" icon="UserRound">
-              <PersonCard person={D.GUEST} />
+            <BlockFrame title="Invitado" icon="UserRound">
+              <PersonCard person={detail?.guest ?? { name: episode.guest, role: episode.guestRole }} />
             </BlockFrame>
             <BlockFrame title="Detalles de Producción" icon="ClipboardList">
-              <InfoCard rows={D.PRODUCTION_INFO} />
+              {detail?.productionInfo?.length ? <InfoCard rows={detail.productionInfo} /> : <NotYet what="detalles de producción" />}
             </BlockFrame>
             <BlockFrame title="Checklist de Producción" icon="ListChecks">
-              <ChecklistPanel lines={D.PRODUCTION_CHECKLIST} />
+              {detail?.productionChecklist?.length ? <ChecklistPanel lines={detail.productionChecklist} /> : <NotYet what="checklist" />}
             </BlockFrame>
             <BlockFrame title="Recursos del Episodio" icon="FileText">
-              <FileList files={D.EPISODE_RESOURCES} />
+              {detail?.episodeResources?.length ? <FileList files={detail.episodeResources} /> : <NotYet what="recursos" />}
             </BlockFrame>
           </div>
         </div>
@@ -213,11 +304,19 @@ export function CentroContenidoView() {
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1fr_340px]">
           <div className="min-w-0 space-y-3">
             <BlockFrame title="Flujo de Distribución" icon="Workflow">
-              <FlowStrip steps={D.DISTRIBUTION_FLOW} progressValue={78} progressLabel="78% completado (7/9 fases)" />
+              {detail?.distributionFlow?.length ? (
+                <FlowStrip
+                  steps={detail.distributionFlow}
+                  progressValue={episode.progress}
+                  progressLabel={`${episode.progress}% completado (${episode.assetsDone}/${episode.assetsTotal} activos)`}
+                />
+              ) : (
+                <NotYet what="flujo de distribución" />
+              )}
             </BlockFrame>
 
             <BlockFrame title="Activos Generados" icon="Boxes">
-              <AssetProgressGrid assets={D.ASSETS} />
+              {detail?.assets?.length ? <AssetProgressGrid assets={detail.assets} /> : <NotYet what="activos generados" />}
               <button
                 type="button"
                 className="mt-3 flex w-full flex-col items-center gap-0.5 rounded-xl border border-dashed border-white/12 py-3 transition-colors hover:border-[var(--allpa-gold-400)]/50"
@@ -237,26 +336,15 @@ export function CentroContenidoView() {
             <BlockFrame title="KPIs de este Episodio" icon="TrendingUp">
               <InfoCard
                 rows={[
-                  { label: "Activos generados", value: "7 / 10" },
-                  { label: "Alcance estimado", value: "125.000 – 185.000" },
-                  { label: "Interacciones estimadas", value: "8.500 – 12.000" },
-                  { label: "Descargas potenciales", value: "2.000 – 3.000" },
-                ]}
-              />
-            </BlockFrame>
-            <BlockFrame title="Calendario de Publicación" icon="CalendarDays">
-              <Timeline
-                steps={[
-                  { id: "c1", label: "Podcast (Madre)", status: "Publicado", tone: "emerald", date: "16 mar 2027", done: true },
-                  { id: "c2", label: "YouTube (Largo)", status: "Publicado", tone: "emerald", date: "17 mar 2027", done: true },
-                  { id: "c3", label: "Clips & Shorts", status: "En progreso", tone: "amber", date: "18 – 24 mar" },
-                  { id: "c4", label: "Reels Instagram", status: "En progreso", tone: "amber", date: "18 – 25 mar" },
-                  { id: "c5", label: "Carrusel", status: "Publicado", tone: "emerald", date: "20 mar 2027", done: true },
+                  { label: "Activos generados", value: `${episode.assetsDone} / ${episode.assetsTotal}` },
+                  { label: "Progreso", value: `${episode.progress}%` },
+                  { label: "Estado", value: episode.status },
+                  { label: "Publicación", value: episode.publishDate },
                 ]}
               />
             </BlockFrame>
             <BlockFrame title="Notas rápidas" icon="StickyNote">
-              <NotesPanel notes={D.QUICK_NOTES} />
+              <NotesPanel notes={detail?.quickNotes ?? []} />
             </BlockFrame>
           </div>
         </div>
@@ -266,30 +354,11 @@ export function CentroContenidoView() {
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1fr_340px]">
           <div className="min-w-0 space-y-3">
             <BlockFrame title="Notas del Episodio" icon="NotebookPen">
-              <RichTextEditor
-                content={`<h3>Resumen de la conversación</h3><p>Discutimos por qué los Trusts no son solo para personas ricas, cómo funcionan, qué tipos existen y cómo pueden proteger a la familia, evitar el probate y asegurar que los menores y activos estén bien protegidos.</p><h3>Puntos destacados</h3><ul><li>Los Trusts son más accesibles de lo que la mayoría cree.</li><li>Diferencia entre Testamento vs. Trust.</li><li>Beneficios de evitar probate en Florida.</li><li>Protección de activos y privacidad.</li><li>Casos reales y ejemplos prácticos para familias latinas.</li></ul>`}
-              />
-            </BlockFrame>
-
-            <BlockFrame title="Etiquetas" icon="Tags">
-              <div className="flex flex-wrap gap-1.5">
-                {["Trusts", "Estate Planning", "Protección Legal", "Familia Hispana", "Probate", "Florida"].map((t) => (
-                  <span key={t} className="rounded-full bg-white/8 px-2.5 py-1 text-xs text-white/65">
-                    {t}
-                  </span>
-                ))}
-                <button
-                  type="button"
-                  className="flex items-center gap-1 rounded-full border border-dashed border-white/15 px-2.5 py-1 text-xs text-white/40 transition-colors hover:border-[var(--allpa-gold-400)]/50 hover:text-[var(--allpa-gold-300)]"
-                >
-                  <Plus className="h-3 w-3" />
-                  Agregar etiqueta
-                </button>
-              </div>
+              <RichTextEditor content={detail?.conversationNotes ?? ""} />
             </BlockFrame>
 
             <BlockFrame title="Documentos del Episodio" icon="FolderOpen">
-              <FileList files={D.DOCUMENTS} downloadable />
+              {detail?.documents?.length ? <FileList files={detail.documents} downloadable /> : <NotYet what="documentos" />}
             </BlockFrame>
 
             {extraBlocks}
@@ -297,10 +366,10 @@ export function CentroContenidoView() {
 
           <div className="space-y-3">
             <BlockFrame title="Notas rápidas" icon="StickyNote">
-              <NotesPanel notes={D.QUICK_NOTES} />
+              <NotesPanel notes={detail?.quickNotes ?? []} />
             </BlockFrame>
             <BlockFrame title="Checklist de Documentos" icon="ListChecks">
-              <ChecklistPanel lines={D.DOCUMENTS_CHECKLIST} />
+              {detail?.documentsChecklist?.length ? <ChecklistPanel lines={detail.documentsChecklist} /> : <NotYet what="checklist" />}
             </BlockFrame>
           </div>
         </div>
@@ -309,184 +378,32 @@ export function CentroContenidoView() {
       {tab === "academia" && (
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1fr_340px]">
           <div className="min-w-0 space-y-3">
-            <BlockFrame title="Información de la Clase" icon="GraduationCap">
-              <p className="text-[11px] uppercase tracking-wide text-white/35">Clase en la Academia</p>
-              <p className="mt-1 font-semibold text-[#f3ecd9]">Los Trusts: protección y tranquilidad para tu familia</p>
-              <div className="mt-4">
-                <InfoCard
-                  rows={[
-                    { label: "Nivel", value: "Intermedio" },
-                    { label: "Categoría", value: "Protección Legal › Trusts" },
-                    { label: "Estado de la clase", value: "En Producción", tone: "amber" },
-                    { label: "Publicación estimada", value: "25 mar 2027" },
-                    { label: "Duración total", value: "35 – 45 min" },
-                    { label: "Lecciones", value: "6" },
-                  ]}
-                />
-              </div>
+            <BlockFrame title="Clase en la Academia" icon="GraduationCap">
+              <p className="text-sm leading-relaxed text-white/55">
+                Convierte este episodio en una clase estructurada por módulos y lecciones. Gestiona el catálogo completo desde la
+                página de Academia.
+              </p>
             </BlockFrame>
-
-            <BlockFrame title="Estructura de la Clase" icon="ListTree">
-              <p className="mb-3 text-xs text-white/40">Organiza los módulos y lecciones que compondrán esta clase.</p>
-              <ClassStructure />
-            </BlockFrame>
-
             {extraBlocks}
           </div>
 
           <div className="space-y-3">
             <BlockFrame title="Vista previa de la clase" icon="PlayCircle">
-              <MediaPreview
-                media={{
-                  kind: "video",
-                  title: "Los Trusts: protección y tranquilidad para tu familia",
-                  subtitle: "con Sonia Muñoz Gallagher",
-                }}
-              />
-            </BlockFrame>
-            <BlockFrame title="Estado de producción" icon="Activity">
-              <ChecklistPanel lines={D.CLASS_PRODUCTION} />
-            </BlockFrame>
-            <BlockFrame title="Recursos de la clase" icon="FileText">
-              <FileList files={D.CLASS_RESOURCES} downloadable />
-            </BlockFrame>
-            <BlockFrame title="Métricas proyectadas" icon="TrendingUp">
-              <InfoCard
-                rows={[
-                  { label: "Estudiantes potenciales", value: "1.200 – 1.800" },
-                  { label: "Tasa de finalización", value: "65% – 75%" },
-                  { label: "Valoración esperada", value: "4.7 / 5" },
-                ]}
-              />
+              <MediaPreview media={{ kind: "video", title: episode.title, subtitle: detail?.guest?.name ?? episode.guest }} />
             </BlockFrame>
           </div>
         </div>
       )}
 
       {tab === "metricas" && (
-        <>
-          <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-white/35">
-            Resumen de rendimiento del episodio
+        <BlockFrame title="Métricas del episodio" icon="TrendingUp">
+          <p className="py-6 text-center text-sm text-white/35">
+            Las métricas reales se activarán cuando conectemos las plataformas de publicación.
           </p>
-          <KpiStrip items={D.EPISODE_KPIS} />
-
-          <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-            <BlockFrame title="Rendimiento por plataforma" icon="BarChart3">
-              <BarChart
-                data={D.PLATFORM_PERFORMANCE}
-                categoryKey="platform"
-                series={[
-                  { key: "alcance", label: "Alcance", color: "#a78bfa" },
-                  { key: "interacciones", label: "Interacciones", color: "#22c55e" },
-                  { key: "reproducciones", label: "Reproducciones", color: "#3b82f6" },
-                ]}
-              />
-            </BlockFrame>
-
-            <BlockFrame title="Embudo de conversión del episodio" icon="Filter">
-              <FunnelChart steps={D.CONVERSION_FUNNEL} />
-            </BlockFrame>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-            <BlockFrame title="Rendimiento de activos derivados" icon="PieChart">
-              <DonutChart
-                slices={[
-                  { id: "comp", label: "Completados", value: 31, color: "#22c55e" },
-                  { id: "prod", label: "En producción", value: 5, color: "#e0a836" },
-                  { id: "prog", label: "Programados", value: 4, color: "#3b82f6" },
-                  { id: "pend", label: "Pendientes", value: 2, color: "#94a3b8" },
-                ]}
-                centerValue="42"
-                centerLabel="Activos totales"
-              />
-            </BlockFrame>
-
-            <BlockFrame title="Top contenidos por rendimiento" icon="Trophy">
-              <ul className="space-y-2.5">
-                {D.TOP_CONTENT.map((c, i) => (
-                  <li key={c.id} className="flex items-center gap-2.5 text-sm">
-                    <span className="w-4 flex-shrink-0 text-xs text-white/35">{i + 1}.</span>
-                    <span className="min-w-0 flex-1 truncate text-white/75">{c.name}</span>
-                    <span className="w-16 flex-shrink-0 text-right tabular-nums text-white/60">{c.reach}</span>
-                    <span className="w-14 flex-shrink-0 text-right tabular-nums text-white/40">{c.inter}</span>
-                  </li>
-                ))}
-              </ul>
-            </BlockFrame>
-          </div>
-
-          {extraBlocks}
-        </>
+        </BlockFrame>
       )}
 
       <AddBlockDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addBlock} />
     </PageShell>
-  );
-}
-
-/** Árbol de módulos y lecciones de la clase de Academia. */
-function ClassStructure() {
-  const [open, setOpen] = useState<string[]>([D.CLASS_MODULES[0].id]);
-
-  const toggle = (id: string) => {
-    setOpen((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
-  };
-
-  const TONES = {
-    emerald: "bg-emerald-400/12 text-emerald-300",
-    amber: "bg-amber-400/12 text-amber-300",
-    violet: "bg-violet-400/12 text-violet-300",
-    neutral: "bg-white/8 text-white/50",
-  } as const;
-
-  return (
-    <div className="space-y-2">
-      {D.CLASS_MODULES.map((mod) => {
-        const isOpen = open.includes(mod.id);
-        return (
-          <div key={mod.id} className="rounded-xl border border-white/10 bg-white/[0.02]">
-            <button
-              type="button"
-              onClick={() => toggle(mod.id)}
-              className="flex w-full flex-wrap items-center gap-2.5 px-3 py-2.5 text-left"
-            >
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--allpa-gold-400)]/12 text-xs font-semibold text-[var(--allpa-gold-300)]">
-                {mod.index}
-              </span>
-              <span className="min-w-0 flex-1 truncate text-sm font-medium text-white/85">{mod.title}</span>
-              <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${TONES[mod.tone]}`}>{mod.status}</span>
-              <span className="hidden flex-shrink-0 text-xs text-white/35 sm:inline">{mod.duration}</span>
-              <span className="hidden flex-shrink-0 text-xs text-white/35 sm:inline">{mod.kind}</span>
-            </button>
-
-            {isOpen && (
-              <ul className="border-t border-white/[0.06] px-3 py-2">
-                {mod.lessons.map((lesson) => (
-                  <li key={lesson.id} className="flex items-center gap-2.5 py-1.5 text-sm">
-                    <span className="w-8 flex-shrink-0 text-xs text-white/35">{lesson.index}</span>
-                    <span className="min-w-0 flex-1 truncate text-white/70">{lesson.title}</span>
-                    <span className="flex-shrink-0 text-xs tabular-nums text-white/40">{lesson.duration}</span>
-                    <span
-                      className={`h-3.5 w-3.5 flex-shrink-0 rounded-full border-2 ${
-                        lesson.done ? "border-emerald-400 bg-emerald-400/30" : "border-white/20"
-                      }`}
-                    />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        );
-      })}
-
-      <button
-        type="button"
-        className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/12 py-2.5 text-sm text-white/40 transition-colors hover:border-[var(--allpa-gold-400)]/50 hover:text-[var(--allpa-gold-300)]"
-      >
-        <Plus className="h-4 w-4" />
-        Agregar módulo
-      </button>
-    </div>
   );
 }

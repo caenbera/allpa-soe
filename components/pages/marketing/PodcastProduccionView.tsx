@@ -7,6 +7,7 @@ import { MetaBar } from "@/components/page-blocks/MetaBar";
 import { AccordionSection, AddSectionButton, type AccordionSectionData } from "@/components/page-blocks/AccordionSection";
 import { CreateSectionDialog } from "@/components/page-blocks/CreateSectionDialog";
 import { useSectionsState } from "@/lib/use-sections";
+import { usePageConfig } from "@/lib/use-page-config";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const initialSections: AccordionSectionData[] = [
@@ -118,8 +119,16 @@ function SidePanel() {
   );
 }
 
+const DEFAULT_META_FIELDS = [
+  { id: "estado_general", value: "en_progreso" },
+  { id: "progreso_total", value: 65 },
+  { id: "fecha_objetivo", value: "2026-05-28" },
+  { id: "responsable", value: "Ana Torres" },
+];
+
 export function PodcastProduccionView() {
   const { sections, addSection, removeSection } = useSectionsState(initialSections);
+  const { metaFields, updateMetaFields } = usePageConfig("/marketing/podcast/produccion", DEFAULT_META_FIELDS);
   const [createOpen, setCreateOpen] = useState(false);
 
   return (
@@ -153,14 +162,7 @@ export function PodcastProduccionView() {
         </TabsList>
 
         <TabsContent value="resumen" className="mt-4">
-          <MetaBar
-            initialFields={[
-              { id: "estado_general", value: "en_progreso" },
-              { id: "progreso_total", value: 65 },
-              { id: "fecha_objetivo", value: "2026-05-28" },
-              { id: "responsable", value: "Ana Torres" },
-            ]}
-          />
+          <MetaBar fields={metaFields} onFieldsChange={updateMetaFields} />
           <RepurposeFlow />
           {sections.map((s) => (
             <AccordionSection key={s.id} data={s} onDelete={() => removeSection(s.id)} />

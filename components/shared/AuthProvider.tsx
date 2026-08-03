@@ -56,6 +56,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { role, companyId } = await ensureUserDoc(user);
         setRole(role);
         setCompanyId(companyId);
+        // El super administrador recibe contenido de demostración en su
+        // propia empresa para poder ver la plataforma con datos reales.
+        // Las empresas de administradores normales arrancan vacías.
+        if (role === "superadmin" && companyId) {
+          const { seedDemoContent } = await import("@/lib/services/demo-seed");
+          seedDemoContent(companyId).catch(() => undefined);
+        }
       } else {
         setRole(null);
         setCompanyId(null);

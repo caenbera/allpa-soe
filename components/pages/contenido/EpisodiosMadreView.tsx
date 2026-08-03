@@ -6,13 +6,15 @@ import { PageShell, PageTabs } from "@/components/page-blocks/PageShell";
 import { BlockFrame } from "@/components/page-blocks/BlockFrame";
 import { AddBlockButton, AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
 import { BlockRenderer } from "@/components/page-blocks/BlockRenderer";
+import { EmptyState, LoadingState } from "@/components/page-blocks/EmptyState";
 import { KpiStrip } from "@/components/page-blocks/blocks/KpiStrip";
 import { FilterToolbar } from "@/components/page-blocks/blocks/FilterToolbar";
 import { DataTable, type RowData } from "@/components/page-blocks/blocks/DataTable";
 import { DonutChart } from "@/components/page-blocks/blocks/DonutChart";
 import { Button } from "@/components/ui/button";
-import { useBlocksState } from "@/lib/use-blocks";
-import { EPISODES, PILLARS, STATUS_TONE, pillarOf, type EpisodeStatus } from "@/components/pages/contenido/mock-data";
+import { useContent } from "@/lib/use-content";
+import { usePageConfig } from "@/lib/use-page-config";
+import { CONTENT_COLLECTIONS, STATUS_TONE, type Episode, type EpisodeStatus, type Pillar } from "@/lib/content-types";
 
 const TABS = [
   { value: "todos", label: "Todos" },
@@ -27,23 +29,36 @@ export function EpisodiosMadreView() {
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [createOpen, setCreateOpen] = useState(false);
-  const { blocks, addBlock, updateBlock, removeBlock } = useBlocksState([]);
+
+  const episodes = useContent<Episode>(CONTENT_COLLECTIONS.episodes);
+  const pillars = useContent<Pillar>(CONTENT_COLLECTIONS.pillars);
+  const { blocks, addBlock, updateBlock, removeBlock } = usePageConfig("/contenido/episodios-madre");
+
+  const pillarOf = (id: string | null) => pillars.items.find((p) => p.id === id);
 
   const counts = useMemo(() => {
-    const by = (s: EpisodeStatus) => EPISODES.filter((e) => e.status === s).length;
-    return { total: EPISODES.length, pub: by("Publicado"), prod: by("En producción"), plan: by("Planeado"), pause: by("Pausado") };
-  }, []);
+    const by = (s: EpisodeStatus) => episodes.items.filter((e) => e.status === s).length;
+    return {
+      total: episodes.items.length,
+      pub: by("Publicado"),
+      prod: by("En producción"),
+      plan: by("Planeado"),
+      pause: by("Pausado"),
+    };
+  }, [episodes.items]);
+
+  const pct = (n: number) => (counts.total > 0 ? `${((n / counts.total) * 100).toFixed(1)}% del total` : "—");
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return EPISODES.filter((ep) => {
+    return episodes.items.filter((ep) => {
       if (tab !== "todos" && ep.status !== tab) return false;
-      const pillarFilter = filters.pillar;
-      if (pillarFilter && pillarFilter !== "Todos" && pillarOf(ep.pillarId)?.name !== pillarFilter) return false;
+      if (filters.pillar && filters.pillar !== "Todos" && pillarOf(ep.pillarId)?.name !== filters.pillar) return false;
       if (!q) return true;
-      return `${ep.title} ${ep.subtitle} ${ep.guest} ${pillarOf(ep.pillarId)?.name ?? ""}`.toLowerCase().includes(q);
+      return `${ep.title} ${ep.subtitle} ${ep.guest}`.toLowerCase().includes(q);
     });
-  }, [tab, search, filters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [episodes.items, pillars.items, tab, search, filters]);
 
   const rows: RowData[] = filtered.map((ep) => {
     const pillar = pillarOf(ep.pillarId);
@@ -62,38 +77,43 @@ export function EpisodiosMadreView() {
     };
   });
 
-  const pillarSlices = PILLARS.map((p) => ({
-    id: p.id,
-    label: p.name,
-    value: EPISODES.filter((e) => e.pillarId === p.id).length,
-    color: p.color,
-  })).filter((s) => s.value > 0);
+  const pillarSlices = pillars.items
+    .map((p) => ({ id: p.id, label: p.name, value: episodes.items.filter((e) => e.pillarId === p.id).length, color: p.color }))
+    .filter((s) => s.value > 0);
+
+  const loading = episodes.loading || pillars.loading;
+  const isEmpty = !loading && counts.total === 0;
 
   const sidePanel = (
     <>
-      <BlockFrame title="Distribución por pilar" icon="PieChart">
-        <DonutChart slices={pillarSlices} centerValue={String(EPISODES.length)} centerLabel="Episodios madre" />
-      </BlockFrame>
+      {!isEmpty && (
+        <>
+          <BlockFrame title="Distribución por pilar" icon="PieChart">
+            {pillarSlices.length > 0 ? (
+              <DonutChart slices={pillarSlices} centerValue={String(counts.total)} centerLabel="Episodios madre" />
+            ) : (
+              <p className="py-4 text-center text-sm text-white/35">Aún no hay pilares con episodios.</p>
+            )}
+          </BlockFrame>
 
-      <BlockFrame title="Estado general" icon="Activity">
-        <ul className="space-y-2.5 text-sm">
-          {[
-            { label: "Publicados", value: counts.pub, color: "bg-emerald-400" },
-            { label: "En producción", value: counts.prod, color: "bg-amber-400" },
-            { label: "Planeados", value: counts.plan, color: "bg-blue-400" },
-            { label: "Pausados", value: counts.pause, color: "bg-white/40" },
-          ].map((r) => (
-            <li key={r.label} className="flex items-center gap-2">
-              <span className={`h-2 w-2 flex-shrink-0 rounded-full ${r.color}`} />
-              <span className="min-w-0 flex-1 truncate text-white/65">{r.label}</span>
-              <span className="tabular-nums font-medium text-white/85">{r.value}</span>
-              <span className="w-12 text-right tabular-nums text-white/35">
-                {((r.value / counts.total) * 100).toFixed(1)}%
-              </span>
-            </li>
-          ))}
-        </ul>
-      </BlockFrame>
+          <BlockFrame title="Estado general" icon="Activity">
+            <ul className="space-y-2.5 text-sm">
+              {[
+                { label: "Publicados", value: counts.pub, color: "bg-emerald-400" },
+                { label: "En producción", value: counts.prod, color: "bg-amber-400" },
+                { label: "Planeados", value: counts.plan, color: "bg-blue-400" },
+                { label: "Pausados", value: counts.pause, color: "bg-white/40" },
+              ].map((r) => (
+                <li key={r.label} className="flex items-center gap-2">
+                  <span className={`h-2 w-2 flex-shrink-0 rounded-full ${r.color}`} />
+                  <span className="min-w-0 flex-1 truncate text-white/65">{r.label}</span>
+                  <span className="tabular-nums font-medium text-white/85">{r.value}</span>
+                </li>
+              ))}
+            </ul>
+          </BlockFrame>
+        </>
+      )}
 
       {blocks.map((block) => (
         <BlockRenderer
@@ -127,50 +147,67 @@ export function EpisodiosMadreView() {
         </>
       }
     >
-      <KpiStrip
-        items={[
-          { id: "total", label: "Episodios madre", value: String(counts.total), sub: "100% del plan", icon: "Mic", tone: "violet" },
-          { id: "pub", label: "Publicados", value: String(counts.pub), sub: `${((counts.pub / counts.total) * 100).toFixed(1)}% del total`, icon: "CheckCircle2", tone: "emerald" },
-          { id: "prod", label: "En producción", value: String(counts.prod), sub: `${((counts.prod / counts.total) * 100).toFixed(1)}% del total`, icon: "Clock", tone: "amber" },
-          { id: "plan", label: "Planeados", value: String(counts.plan), sub: `${((counts.plan / counts.total) * 100).toFixed(1)}% del total`, icon: "CalendarDays", tone: "blue" },
-          { id: "pause", label: "Pausados", value: String(counts.pause), sub: `${((counts.pause / counts.total) * 100).toFixed(1)}% del total`, icon: "Pause", tone: "gold" },
-        ]}
-      />
-
-      <div className="surface-card mt-3 overflow-hidden">
-        <div className="px-4 pt-3">
-          <PageTabs tabs={TABS} active={tab} onChange={setTab} />
+      {loading ? (
+        <div className="surface-card">
+          <LoadingState />
         </div>
-        <div className="px-4 pb-4">
-          <div className="mb-4">
-            <FilterToolbar
-              search={search}
-              onSearchChange={setSearch}
-              searchPlaceholder="Buscar por tema, pilar o invitado..."
-              filters={[{ id: "pillar", label: "Pilar", options: PILLARS.map((p) => p.name) }]}
-              values={filters}
-              onFilterChange={(id, value) => setFilters((f) => ({ ...f, [id]: value }))}
-              onExport={() => undefined}
-            />
-          </div>
-          <DataTable
-            columns={[
-              { id: "index", header: "#", width: "56px" },
-              { id: "episode", header: "Episodio Madre", sortable: true },
-              { id: "pillar", header: "Pilar Estratégico", sortable: true, width: "160px" },
-              { id: "guest", header: "Invitado Principal", sortable: true, width: "190px" },
-              { id: "status", header: "Estado", sortable: true, width: "140px" },
-              { id: "week", header: "Semana", sortable: true, width: "110px" },
-              { id: "progress", header: "Progreso", sortable: true, width: "150px" },
-              { id: "publish", header: "Fecha de Publicación", width: "160px" },
-            ]}
-            rows={rows}
-            onView={() => undefined}
-            onEditRow={() => undefined}
-            onDeleteRow={() => undefined}
+      ) : isEmpty ? (
+        <div className="surface-card">
+          <EmptyState
+            icon="Mic"
+            title="Todavía no hay episodios madre"
+            description="Cada episodio madre lidera una semana del plan y genera los activos derivados que alimentan tus plataformas. Crea el primero para empezar."
+            actionLabel="Nueva Semana"
+            onAction={() => undefined}
           />
         </div>
-      </div>
+      ) : (
+        <>
+          <KpiStrip
+            items={[
+              { id: "total", label: "Episodios madre", value: String(counts.total), sub: "100% del plan", icon: "Mic", tone: "violet" },
+              { id: "pub", label: "Publicados", value: String(counts.pub), sub: pct(counts.pub), icon: "CheckCircle2", tone: "emerald" },
+              { id: "prod", label: "En producción", value: String(counts.prod), sub: pct(counts.prod), icon: "Clock", tone: "amber" },
+              { id: "plan", label: "Planeados", value: String(counts.plan), sub: pct(counts.plan), icon: "CalendarDays", tone: "blue" },
+              { id: "pause", label: "Pausados", value: String(counts.pause), sub: pct(counts.pause), icon: "Pause", tone: "gold" },
+            ]}
+          />
+
+          <div className="surface-card mt-3 overflow-hidden">
+            <div className="px-4 pt-3">
+              <PageTabs tabs={TABS} active={tab} onChange={setTab} />
+            </div>
+            <div className="px-4 pb-4">
+              <div className="mb-4">
+                <FilterToolbar
+                  search={search}
+                  onSearchChange={setSearch}
+                  searchPlaceholder="Buscar por tema, pilar o invitado..."
+                  filters={[{ id: "pillar", label: "Pilar", options: pillars.items.map((p) => p.name) }]}
+                  values={filters}
+                  onFilterChange={(id, value) => setFilters((f) => ({ ...f, [id]: value }))}
+                  onExport={() => undefined}
+                />
+              </div>
+              <DataTable
+                columns={[
+                  { id: "index", header: "#", width: "56px" },
+                  { id: "episode", header: "Episodio Madre", sortable: true },
+                  { id: "pillar", header: "Pilar Estratégico", sortable: true, width: "160px" },
+                  { id: "guest", header: "Invitado Principal", sortable: true, width: "190px" },
+                  { id: "status", header: "Estado", sortable: true, width: "140px" },
+                  { id: "week", header: "Semana", sortable: true, width: "110px" },
+                  { id: "progress", header: "Progreso", sortable: true, width: "150px" },
+                  { id: "publish", header: "Fecha de Publicación", width: "160px" },
+                ]}
+                rows={rows}
+                onView={() => undefined}
+                onDeleteRow={(id) => episodes.remove(id)}
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       <AddBlockDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addBlock} />
     </PageShell>

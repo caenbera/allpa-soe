@@ -228,28 +228,47 @@ function BrandIconInline({ brand }: { brand: BrandKey }) {
   return <Icon className="h-4 w-4 flex-shrink-0" />;
 }
 
-export function MetaBar({ initialFields }: { initialFields: MetaFieldState[] }) {
-  const [fields, setFields] = useState<MetaFieldState[]>(initialFields);
+/**
+ * Barra de características de la página.
+ *
+ * Puede funcionar sin control externo (estado local) o controlada por la
+ * página con `fields` + `onFieldsChange`, que es como se persiste en
+ * Firestore a través de `usePageConfig`.
+ */
+export function MetaBar({
+  initialFields,
+  fields: controlledFields,
+  onFieldsChange,
+}: {
+  initialFields?: MetaFieldState[];
+  fields?: MetaFieldState[];
+  onFieldsChange?: (fields: MetaFieldState[]) => void;
+}) {
+  const [localFields, setLocalFields] = useState<MetaFieldState[]>(initialFields ?? []);
+  const fields = controlledFields ?? localFields;
+
+  const commit = (next: MetaFieldState[]) => {
+    if (onFieldsChange) onFieldsChange(next);
+    else setLocalFields(next);
+  };
 
   const activeIds = new Set(fields.map((f) => f.id));
 
   const updateValue = (id: string, value: string | number) => {
-    setFields((list) => list.map((f) => (f.id === id ? { ...f, value } : f)));
+    commit(fields.map((f) => (f.id === id ? { ...f, value } : f)));
   };
 
   const toggleField = (id: string, checked: boolean) => {
     if (checked) {
       const def = getMetaFieldDef(id);
       if (!def) return;
-      setFields((list) => {
-        if (list.length >= META_FIELD_MAX) {
-          toast.error(`Máximo ${META_FIELD_MAX} características visibles a la vez.`);
-          return list;
-        }
-        return [...list, { id, value: DEFAULT_VALUE[def.type] }];
-      });
+      if (fields.length >= META_FIELD_MAX) {
+        toast.error(`Máximo ${META_FIELD_MAX} características visibles a la vez.`);
+        return;
+      }
+      commit([...fields, { id, value: DEFAULT_VALUE[def.type] }]);
     } else {
-      setFields((list) => list.filter((f) => f.id !== id));
+      commit(fields.filter((f) => f.id !== id));
     }
   };
 

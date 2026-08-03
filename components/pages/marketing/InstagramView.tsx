@@ -7,6 +7,7 @@ import { MetaBar } from "@/components/page-blocks/MetaBar";
 import { AccordionSection, AddSectionButton, type AccordionSectionData } from "@/components/page-blocks/AccordionSection";
 import { CreateSectionDialog } from "@/components/page-blocks/CreateSectionDialog";
 import { useSectionsState } from "@/lib/use-sections";
+import { usePageConfig } from "@/lib/use-page-config";
 
 const initialSections: AccordionSectionData[] = [
   {
@@ -82,8 +83,17 @@ function SidePanel() {
   );
 }
 
+const DEFAULT_META_FIELDS = [
+  { id: "progreso_total", value: 72 },
+  { id: "responsable", value: "Ana Torres" },
+  { id: "plataforma", value: "instagram" },
+  { id: "frecuencia", value: "4 publicaciones/semana" },
+  { id: "fecha_objetivo", value: "2026-05-31" },
+];
+
 export function InstagramView() {
   const { sections, addSection, removeSection } = useSectionsState(initialSections);
+  const { metaFields, updateMetaFields } = usePageConfig("/marketing/redes-sociales/instagram", DEFAULT_META_FIELDS);
   const [createOpen, setCreateOpen] = useState(false);
 
   return (
@@ -94,15 +104,7 @@ export function InstagramView() {
       sidePanel={<SidePanel />}
       onNewBlock={() => setCreateOpen(true)}
     >
-      <MetaBar
-        initialFields={[
-          { id: "progreso_total", value: 72 },
-          { id: "responsable", value: "Ana Torres" },
-          { id: "plataforma", value: "instagram" },
-          { id: "frecuencia", value: "4 publicaciones/semana" },
-          { id: "fecha_objetivo", value: "2026-05-31" },
-        ]}
-      />
+      <MetaBar fields={metaFields} onFieldsChange={updateMetaFields} />
       {sections.map((s) => (
         <AccordionSection key={s.id} data={s} onDelete={() => removeSection(s.id)} />
       ))}

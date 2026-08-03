@@ -334,24 +334,25 @@ export function ChecklistTable({
         </table>
       </div>
 
-      <div className="mt-2 flex items-center gap-2">
-        <Plus className="h-3.5 w-3.5 flex-shrink-0 text-white/35" />
+      {/* Mismo estilo punteado que "Agregar nuevo bloque", para que se lea
+          como una acción y no como texto suelto. */}
+      <div className="mt-3 flex items-center gap-2 rounded-xl border border-dashed border-white/12 px-3 py-2 transition-colors focus-within:border-[var(--allpa-gold-400)]/60 hover:border-white/25">
+        <Plus className="h-4 w-4 flex-shrink-0 text-[var(--allpa-gold-300)]" />
         <input
           value={newTask}
           onChange={(e) => setNewTask(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && addTask()}
           placeholder="Agregar tarea"
-          className="h-7 min-w-0 flex-1 rounded-md bg-transparent text-sm text-white/70 outline-none placeholder:text-white/30"
+          className="h-7 min-w-0 flex-1 bg-transparent text-sm text-white/85 outline-none placeholder:text-white/45"
         />
-        {newTask.trim() && (
-          <button
-            type="button"
-            onClick={addTask}
-            className="flex-shrink-0 rounded-lg bg-[var(--allpa-gold-400)]/15 px-2.5 py-1 text-xs font-semibold text-[var(--allpa-gold-300)] transition-colors hover:bg-[var(--allpa-gold-400)]/25"
-          >
-            Agregar
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={addTask}
+          disabled={!newTask.trim()}
+          className="flex-shrink-0 rounded-lg bg-[var(--allpa-gold-400)]/15 px-2.5 py-1 text-xs font-semibold text-[var(--allpa-gold-300)] transition-colors hover:bg-[var(--allpa-gold-400)]/25 disabled:cursor-not-allowed disabled:bg-white/5 disabled:text-white/25"
+        >
+          Agregar
+        </button>
       </div>
     </div>
   );

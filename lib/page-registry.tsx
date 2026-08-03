@@ -5,6 +5,7 @@ import { InstagramView } from "@/components/pages/marketing/InstagramView";
 import { PodcastProduccionView } from "@/components/pages/marketing/PodcastProduccionView";
 import { InvitadosView } from "@/components/pages/marketing/InvitadosView";
 import { CentroContenidoView } from "@/components/pages/contenido/CentroContenidoView";
+import { SemanaDetalleView } from "@/components/pages/contenido/SemanaDetalleView";
 import { EpisodiosMadreView } from "@/components/pages/contenido/EpisodiosMadreView";
 import { ContenidoDerivadoView } from "@/components/pages/contenido/ContenidoDerivadoView";
 import { BibliotecaMultimediaView } from "@/components/pages/contenido/BibliotecaMultimediaView";
@@ -30,3 +31,31 @@ export const pageRegistry: Record<string, ComponentType> = {
   "/contenido/biblioteca-multimedia": BibliotecaMultimediaView,
   "/contenido/recursos-descargables": RecursosDescargablesView,
 };
+
+/**
+ * Rutas con parámetro, para las páginas de detalle que cuelgan de otra.
+ * Se consultan cuando el mapa exacto no encuentra nada.
+ */
+const dynamicRoutes: { pattern: RegExp; render: (m: RegExpMatchArray) => React.ReactNode }[] = [
+  {
+    pattern: /^\/contenido\/calendario-maestro\/semana-(\d{1,2})$/,
+    render: (m) => <SemanaDetalleView week={Number(m[1])} />,
+  },
+];
+
+/** Resuelve una ruta a su contenido, o `null` si todavía no existe la página. */
+export function resolvePage(path: string): React.ReactNode | null {
+  const Exact = pageRegistry[path];
+  if (Exact) return <Exact />;
+
+  for (const route of dynamicRoutes) {
+    const match = path.match(route.pattern);
+    if (match) return route.render(match);
+  }
+  return null;
+}
+
+/** Ruta del detalle de una semana; la usan las tarjetas de calendario. */
+export function weekDetailPath(week: number) {
+  return `/contenido/calendario-maestro/semana-${week}`;
+}

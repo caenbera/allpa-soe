@@ -31,7 +31,27 @@ export interface Pillar {
   weeksPlanned: number;
   growth: string | null;
   order: number;
+  /** Temas que cubre el pilar; se muestran como viñetas en su tarjeta. */
+  topics?: string[];
 }
+
+/**
+ * Los nueve canales por los que se distribuye cada episodio madre.
+ * Las tarjetas de semana pintan un punto por canal y lo rellenan según
+ * cuántos activos lleva generados el episodio, así que no hace falta
+ * guardar el desglose en cada documento.
+ */
+export const CONTENT_CHANNELS = [
+  { id: "youtube", label: "YouTube (Largo)", icon: "Video", color: "#ef4444" },
+  { id: "clips", label: "Clips & Shorts", icon: "Scissors", color: "#22c55e" },
+  { id: "carrusel", label: "Carrusel", icon: "Rows3", color: "#3b82f6" },
+  { id: "pdf", label: "PDF / Guía", icon: "FileDown", color: "#f472b6" },
+  { id: "academia", label: "Academia", icon: "GraduationCap", color: "#a78bfa" },
+  { id: "email", label: "Email", icon: "Mail", color: "#e0a836" },
+  { id: "articulo", label: "Artículo SEO", icon: "FileText", color: "#22c55e" },
+  { id: "reels", label: "Reels", icon: "Camera", color: "#f472b6" },
+  { id: "podcast", label: "Podcast", icon: "Mic", color: "#a78bfa" },
+] as const;
 
 import type { FlowStep } from "@/components/page-blocks/blocks/FlowStrip";
 import type { AssetCard } from "@/components/page-blocks/blocks/AssetProgressGrid";
@@ -84,6 +104,8 @@ export interface Episode {
   assetsTotal: number;
   publishDate: string;
   order: number;
+  /** Rango de la semana, ej. "22 – 28 mar". */
+  dateRange?: string;
   detail?: EpisodeDetail | null;
 }
 

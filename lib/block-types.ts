@@ -28,7 +28,13 @@ export type BlockType =
   | "calendar-grid"
   | "bar-chart"
   | "funnel-chart"
-  | "rich-text";
+  | "rich-text"
+  | "week-strip"
+  | "week-cards"
+  | "pillar-cards"
+  | "ecosystem-hub"
+  | "kpi-progress"
+  | "upcoming-episodes";
 
 export interface BlockInstance<TConfig = unknown> {
   id: string;
@@ -69,6 +75,12 @@ export const BLOCK_TYPE_CATALOG: BlockTypeDef[] = [
   { type: "bar-chart", label: "Gráfico de barras", description: "Comparativa por categoría.", icon: "BarChart3" },
   { type: "funnel-chart", label: "Embudo", description: "Etapas de conversión.", icon: "Filter" },
   { type: "rich-text", label: "Texto enriquecido", description: "Bloque de redacción libre.", icon: "PenLine" },
+  { type: "week-strip", label: "Tira de semanas", description: "Carrusel S01–S52 para saltar entre semanas.", icon: "CalendarRange" },
+  { type: "week-cards", label: "Tarjetas de semana", description: "Semanas con invitado, estado y activos generados.", icon: "CalendarDays" },
+  { type: "pillar-cards", label: "Tarjetas de pilar", description: "Pilares estratégicos con sus temas y avance.", icon: "Target" },
+  { type: "ecosystem-hub", label: "Ecosistema de contenido", description: "Diagrama radial de un episodio a sus activos.", icon: "Share2" },
+  { type: "kpi-progress", label: "Indicadores con barra", description: "Métricas con su progreso.", icon: "TrendingUp" },
+  { type: "upcoming-episodes", label: "Próximos episodios", description: "Las siguientes semanas del plan.", icon: "CalendarClock" },
 ];
 
 export function getBlockTypeDef(type: BlockType): BlockTypeDef | undefined {

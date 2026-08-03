@@ -1,73 +1,228 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowLeft, Check, Plus } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowRight, ChevronDown, LayoutGrid, List, Plus, Search } from "lucide-react";
 import { PageShell, PageTabs } from "@/components/page-blocks/PageShell";
 import { BlockFrame } from "@/components/page-blocks/BlockFrame";
 import { AddBlockButton, AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
 import { BlockRenderer } from "@/components/page-blocks/BlockRenderer";
 import { EmptyState, LoadingState } from "@/components/page-blocks/EmptyState";
-import { MetaBar } from "@/components/page-blocks/MetaBar";
-import { DonutChart } from "@/components/page-blocks/blocks/DonutChart";
-import { InfoCard } from "@/components/page-blocks/blocks/InfoCard";
-import { FileList } from "@/components/page-blocks/blocks/FileList";
-import { ChecklistPanel } from "@/components/page-blocks/blocks/ChecklistPanel";
-import { NotesPanel } from "@/components/page-blocks/blocks/NotesPanel";
-import { FlowStrip } from "@/components/page-blocks/blocks/FlowStrip";
-import { AssetProgressGrid } from "@/components/page-blocks/blocks/AssetProgressGrid";
-import { PersonCard } from "@/components/page-blocks/blocks/PersonCard";
-import { Timeline } from "@/components/page-blocks/blocks/Timeline";
-import { MediaPreview } from "@/components/page-blocks/blocks/MediaPreview";
-import { RichTextEditor } from "@/components/page-blocks/RichTextEditor";
+import { KpiStrip } from "@/components/page-blocks/blocks/KpiStrip";
+import { WeekStrip } from "@/components/page-blocks/blocks/WeekStrip";
+import { WeekCardGrid, type WeekCardData } from "@/components/page-blocks/blocks/WeekCardGrid";
+import { PillarCardGrid } from "@/components/page-blocks/blocks/PillarCardGrid";
+import { EcosystemHub } from "@/components/page-blocks/blocks/EcosystemHub";
+import { KpiProgressList } from "@/components/page-blocks/blocks/KpiProgressList";
+import { UpcomingEpisodes } from "@/components/page-blocks/blocks/UpcomingEpisodes";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useContent } from "@/lib/use-content";
 import { usePageConfig } from "@/lib/use-page-config";
-import { CONTENT_COLLECTIONS, type Episode, type Pillar } from "@/lib/content-types";
+import { weekDetailPath } from "@/lib/page-registry";
+import { CONTENT_COLLECTIONS, type Episode, type EpisodeStatus, type Pillar } from "@/lib/content-types";
 
+const TOTAL_WEEKS = 52;
+/** Cuántas tarjetas se muestran alrededor de la semana enfocada. */
+const VISIBLE_WEEKS = 5;
+
+/** Las pestañas navegan a las páginas hermanas del módulo. */
 const TABS = [
-  { value: "resumen", label: "Resumen", icon: "LayoutDashboard" },
-  { value: "podcast", label: "Podcast (Episodio Madre)", icon: "Mic" },
-  { value: "distribucion", label: "Distribución y Activos", icon: "Share2" },
-  { value: "notas", label: "Notas y Documentos", icon: "FileText" },
-  { value: "academia", label: "Academia", icon: "GraduationCap" },
-  { value: "metricas", label: "Métricas", icon: "BarChart3" },
+  { value: "resumen", label: "Resumen", href: "/contenido/centro-de-contenido" },
+  { value: "calendario", label: "Calendario", href: "/contenido/calendario-maestro" },
+  { value: "temas", label: "Temas Estratégicos", href: "/contenido/temas-estrategicos" },
+  { value: "episodios", label: "Episodios Madre", href: "/contenido/episodios-madre" },
+  { value: "derivado", label: "Contenido Derivado", href: "/contenido/contenido-derivado" },
+  { value: "academia", label: "Academia", href: "/contenido/academia" },
+  { value: "biblioteca", label: "Biblioteca", href: "/contenido/biblioteca-multimedia" },
 ];
 
-/** Aviso reutilizable cuando una sección del episodio aún no tiene contenido. */
-function NotYet({ what }: { what: string }) {
-  return <p className="py-6 text-center text-sm text-white/35">Todavía no hay {what} para este episodio.</p>;
-}
+const STATUS_PILL: Record<EpisodeStatus, string> = {
+  Publicado: "bg-emerald-400/12 text-emerald-300",
+  "En producción": "bg-amber-400/12 text-amber-300",
+  Planeado: "bg-blue-400/12 text-blue-300",
+  Pausado: "bg-white/8 text-white/50",
+};
+
+const ECOSYSTEM_SPOKES = [
+  { id: "youtube", label: "YouTube", sub: "(Largo)", icon: "Video", color: "#ef4444" },
+  { id: "clips", label: "Clips & Shorts", sub: "(5-10)", icon: "Scissors", color: "#22c55e" },
+  { id: "carrusel", label: "Carrusel", sub: "(1)", icon: "Rows3", color: "#3b82f6" },
+  { id: "pdf", label: "PDF / Guía", sub: "(1)", icon: "FileDown", color: "#f472b6" },
+  { id: "academia", label: "Academia", sub: "(1 Clase)", icon: "GraduationCap", color: "#a78bfa" },
+  { id: "email", label: "Email", sub: "(1)", icon: "Mail", color: "#e0a836" },
+  { id: "articulo", label: "Artículo SEO", sub: "(1)", icon: "FileText", color: "#22c55e" },
+  { id: "reels", label: "Reels", sub: "(8-12)", icon: "Camera", color: "#f472b6" },
+];
 
 export function CentroContenidoView() {
-  const [tab, setTab] = useState("resumen");
+  const router = useRouter();
+  const [year, setYear] = useState(2027);
+  const [search, setSearch] = useState("");
+  const [activeWeek, setActiveWeek] = useState(12);
+  const [view, setView] = useState<"semanal" | "lista">("semanal");
   const [createOpen, setCreateOpen] = useState(false);
 
   const episodes = useContent<Episode>(CONTENT_COLLECTIONS.episodes);
   const pillars = useContent<Pillar>(CONTENT_COLLECTIONS.pillars);
-  const { metaFields, updateMetaFields, blocks, addBlock, updateBlock, removeBlock } = usePageConfig(
-    "/contenido/centro-de-contenido",
-    [
-      { id: "progreso_total", value: 0 },
-      { id: "responsable", value: "Sin asignar" },
-      { id: "fecha_objetivo", value: new Date().toISOString().slice(0, 10) },
-      { id: "prioridad", value: "media" },
-    ]
-  );
+  const { blocks, addBlock, updateBlock, removeBlock } = usePageConfig("/contenido/centro-de-contenido");
 
-  /** Se muestra el episodio con detalle; si ninguno lo tiene, el primero en producción. */
-  const episode = useMemo(() => {
-    const withDetail = episodes.items.find((e) => e.detail);
-    if (withDetail) return withDetail;
-    return episodes.items.find((e) => e.status === "En producción") ?? episodes.items[0] ?? null;
+  const byWeek = useMemo(() => {
+    const map = new Map<number, Episode>();
+    episodes.items.forEach((e) => map.set(e.week, e));
+    return map;
   }, [episodes.items]);
 
-  const detail = episode?.detail ?? null;
-  const pillar = pillars.items.find((p) => p.id === episode?.pillarId);
+  const counts = useMemo(() => {
+    const by = (s: EpisodeStatus) => episodes.items.filter((e) => e.status === s).length;
+    const assetsDone = episodes.items.reduce((sum, e) => sum + e.assetsDone, 0);
+    const assetsTotal = episodes.items.reduce((sum, e) => sum + e.assetsTotal, 0);
+    // "Programados" son las próximas semanas planeadas a partir de la activa.
+    const scheduled = episodes.items.filter((e) => e.status === "Planeado" && e.week >= activeWeek).length;
+    return {
+      total: episodes.items.length,
+      published: by("Publicado"),
+      inProduction: by("En producción"),
+      scheduled: Math.min(scheduled, 4),
+      assetsDone,
+      assetsTotal,
+      index: assetsTotal > 0 ? Math.round((assetsDone / assetsTotal) * 100) : 0,
+    };
+  }, [episodes.items, activeWeek]);
+
+  /** Ventana de semanas alrededor de la activa, acotada a los extremos del año. */
+  const visibleWeeks: WeekCardData[] = useMemo(() => {
+    const half = Math.floor(VISIBLE_WEEKS / 2);
+    let from = Math.max(1, activeWeek - half);
+    const to = Math.min(TOTAL_WEEKS, from + VISIBLE_WEEKS - 1);
+    from = Math.max(1, to - VISIBLE_WEEKS + 1);
+
+    const cards: WeekCardData[] = [];
+    for (let w = from; w <= to; w++) {
+      const ep = byWeek.get(w);
+      if (!ep) continue;
+      if (search.trim()) {
+        const q = search.trim().toLowerCase();
+        if (!`${ep.title} ${ep.guest}`.toLowerCase().includes(q)) continue;
+      }
+      cards.push({
+        id: ep.id,
+        week: ep.week,
+        dateRange: ep.dateRange ?? "—",
+        title: ep.title,
+        guest: ep.guest,
+        guestLabel: "Invitado",
+        status: ep.status,
+        statusClass: STATUS_PILL[ep.status],
+        assetsDone: ep.assetsDone,
+        assetsTotal: ep.assetsTotal,
+        href: weekDetailPath(ep.week),
+        highlighted: ep.week === activeWeek,
+      });
+    }
+    return cards;
+  }, [byWeek, activeWeek, search]);
+
+  const pillarCards = useMemo(
+    () =>
+      pillars.items.map((p) => {
+        const eps = episodes.items.filter((e) => e.pillarId === p.id).length;
+        return {
+          id: p.id,
+          name: p.name,
+          icon: p.icon,
+          color: p.color,
+          topics: p.topics ?? [],
+          episodes: eps,
+          share: counts.total > 0 ? Math.round((eps / counts.total) * 100) : 0,
+        };
+      }),
+    [pillars.items, episodes.items, counts.total]
+  );
+
+  const upcoming = useMemo(
+    () =>
+      episodes.items
+        .filter((e) => e.week > activeWeek && e.status !== "Pausado")
+        .slice(0, 3)
+        .map((e) => ({
+          id: e.id,
+          week: e.week,
+          dateRange: e.dateRange ?? "—",
+          title: e.title,
+          guest: e.guest,
+          guestLabel: "Invitado",
+          href: weekDetailPath(e.week),
+        })),
+    [episodes.items, activeWeek]
+  );
 
   const loading = episodes.loading || pillars.loading;
+  const isEmpty = !loading && counts.total === 0;
 
-  const extraBlocks = (
+  const sidePanel = (
     <>
+      {!isEmpty && (
+        <>
+          <BlockFrame title="Ecosistema de Contenido" icon="Share2">
+            <p className="mb-2 text-xs text-white/40">De un episodio madre a múltiples activos</p>
+            <EcosystemHub
+              center={{ label: "Podcast", sub: "(Episodio Madre)", icon: "Mic" }}
+              spokes={ECOSYSTEM_SPOKES}
+            />
+            <Link
+              href="/contenido/contenido-derivado"
+              className="mt-2 flex items-center justify-center gap-1 text-xs font-medium text-[var(--allpa-gold-300)] hover:underline"
+            >
+              Ver flujo completo
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </BlockFrame>
+
+          <BlockFrame title="KPIs de Contenido" icon="TrendingUp">
+            <KpiProgressList
+              rows={[
+                {
+                  id: "pub",
+                  label: "Episodios publicados",
+                  icon: "CheckCircle2",
+                  value: `${counts.published} / ${counts.total}`,
+                  percent: counts.total > 0 ? Math.round((counts.published / counts.total) * 100) : 0,
+                },
+                {
+                  id: "assets",
+                  label: "Activos generados",
+                  icon: "Boxes",
+                  value: `${counts.assetsDone} / ${counts.assetsTotal}`,
+                  percent: counts.index,
+                },
+                { id: "audience", label: "Audiencia total", icon: "Users", value: "48,250" },
+                { id: "hours", label: "Horas de contenido", icon: "Clock", value: "86h 32m" },
+                { id: "downloads", label: "Descargas de recursos", icon: "Download", value: "5,412" },
+              ]}
+            />
+          </BlockFrame>
+
+          <BlockFrame title="Próximos Episodios" icon="CalendarClock">
+            <UpcomingEpisodes episodes={upcoming} />
+            <Link
+              href="/contenido/calendario-maestro"
+              className="mt-3 flex items-center justify-center gap-1 text-xs font-medium text-[var(--allpa-gold-300)] hover:underline"
+            >
+              Ver todos los episodios programados
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </BlockFrame>
+        </>
+      )}
+
       {blocks.map((block) => (
         <BlockRenderer
           key={block.id}
@@ -80,327 +235,167 @@ export function CentroContenidoView() {
     </>
   );
 
-  if (loading) {
-    return (
-      <PageShell title="Centro de Contenido" icon="LayoutDashboard" starrable={false}>
-        <div className="surface-card">
-          <LoadingState />
-        </div>
-      </PageShell>
-    );
-  }
-
-  if (!episode) {
-    return (
-      <PageShell
-        title="Centro de Contenido"
-        description="El detalle completo de cada semana: episodio madre, activos derivados, notas, clase y métricas."
-        icon="LayoutDashboard"
-        starrable={false}
-      >
-        <div className="surface-card">
-          <EmptyState
-            icon="LayoutDashboard"
-            title="Todavía no hay semanas que mostrar"
-            description="El Centro de Contenido reúne todo el trabajo de una semana en un solo lugar. Crea tu primer episodio madre desde el Calendario Maestro para empezar."
-          />
-        </div>
-        <AddBlockDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addBlock} />
-      </PageShell>
-    );
-  }
-
-  const sidePanel = (
-    <>
-      <BlockFrame title="Ecosistema de Contenido" icon="PieChart">
-        <p className="mb-3 text-xs text-white/40">Progreso de activos derivados de este episodio</p>
-        <DonutChart
-          slices={[
-            { id: "done", label: "Completado", value: episode.assetsDone, color: "#22c55e" },
-            { id: "left", label: "Pendiente", value: Math.max(0, episode.assetsTotal - episode.assetsDone), color: "#94a3b8" },
-          ].filter((s) => s.value > 0)}
-          centerValue={`${episode.progress}%`}
-          centerLabel="Completado"
-          showPercent={false}
-        />
-      </BlockFrame>
-
-      <BlockFrame title="Notas rápidas" icon="StickyNote">
-        <NotesPanel notes={detail?.quickNotes ?? []} />
-      </BlockFrame>
-
-      <BlockFrame title="Recursos y Documentos" icon="FileText">
-        {detail?.resources?.length ? <FileList files={detail.resources} /> : <NotYet what="recursos" />}
-      </BlockFrame>
-
-      {extraBlocks}
-    </>
-  );
-
   return (
     <PageShell
-      title={episode.title}
-      description={detail?.description ?? episode.subtitle}
-      status="en_progreso"
-      sidePanel={tab === "resumen" ? sidePanel : undefined}
+      title="Centro de Contenido"
+      description="Tu fábrica de contenido que construye educación, confianza y legado."
+      icon="Clapperboard"
+      starrable={false}
+      sidePanel={sidePanel}
       headerActions={
         <>
-          <Button variant="outline" size="sm" className="border-white/12 bg-white/[0.03] text-white/70 hover:bg-white/[0.06]">
-            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
-            Volver al Calendario
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex h-9 items-center gap-1.5 rounded-lg border border-white/12 bg-white/[0.03] px-3 text-sm text-white/70 transition-colors hover:bg-white/[0.06]">
+              Año {year}
+              <ChevronDown className="h-3.5 w-3.5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-32">
+              {[year - 1, year, year + 1].map((y) => (
+                <DropdownMenuItem key={y} onClick={() => setYear(y)}>
+                  Año {y}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <div className="relative hidden w-56 lg:block">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar contenido, temas, invitados..."
+              className="h-9 bg-muted/40 pl-9"
+            />
+          </div>
+
           <Button className="border-0 bg-gradient-to-b from-[#f5da93] to-[#c98f1f] font-semibold text-[#241a05] hover:brightness-105">
             <Plus className="mr-1.5 h-4 w-4" />
-            Nuevo Activo Derivado
+            Nuevo Episodio
           </Button>
         </>
       }
     >
-      <p className="-mt-2 mb-3 text-sm font-medium text-[var(--allpa-gold-300)]">
-        Semana {episode.week}
-        {detail?.episodeLabel ? ` · ${detail.episodeLabel}` : ""}
-        {detail?.dates ? ` · ${detail.dates}` : ""}
-        {pillar ? ` · ${pillar.name}` : ""}
-      </p>
+      <PageTabs
+        tabs={TABS}
+        active="resumen"
+        onChange={(value) => {
+          const tab = TABS.find((t) => t.value === value);
+          if (tab && tab.value !== "resumen") router.push(tab.href);
+        }}
+      />
 
-      <MetaBar fields={metaFields} onFieldsChange={updateMetaFields} />
-
-      <PageTabs tabs={TABS} active={tab} onChange={setTab} />
-
-      {tab === "resumen" && (
+      {loading ? (
+        <div className="surface-card">
+          <LoadingState />
+        </div>
+      ) : isEmpty ? (
+        <div className="surface-card">
+          <EmptyState
+            icon="Clapperboard"
+            title="Tu plan de contenido está vacío"
+            description="El Centro de Contenido reúne las 52 semanas del año: cada una con su episodio madre, su invitado y los activos que nacen de él. Crea el primero para empezar."
+            actionLabel="Nuevo Episodio"
+            onAction={() => undefined}
+          />
+        </div>
+      ) : (
         <>
-          <BlockFrame title="Invitado" icon="UserRound">
-            {detail?.guest ? (
-              <PersonCard person={detail.guest} />
-            ) : (
-              <PersonCard person={{ name: episode.guest, role: episode.guestRole }} />
-            )}
-          </BlockFrame>
+          <KpiStrip
+            items={[
+              { id: "planned", label: "Episodios planificados", value: String(counts.total), sub: `Año ${year}`, icon: "Mic", tone: "violet" },
+              { id: "published", label: "Episodios publicados", value: String(counts.published), sub: `${counts.total > 0 ? Math.round((counts.published / counts.total) * 100) : 0}% del año`, icon: "CheckCircle2", tone: "emerald" },
+              { id: "production", label: "En producción", value: String(counts.inProduction), sub: `${counts.total > 0 ? Math.round((counts.inProduction / counts.total) * 100) : 0}% del año`, icon: "Clock", tone: "amber" },
+              { id: "scheduled", label: "Programados", value: String(counts.scheduled), sub: "Próximas 4 semanas", icon: "CalendarDays", tone: "blue" },
+              { id: "index", label: "Índice de contenido", value: `${counts.index}%`, sub: "Activos generados", icon: "TrendingUp", tone: "gold" },
+            ]}
+          />
 
-          <BlockFrame title="Resumen del Episodio" icon="FileText">
-            <p className="text-sm leading-relaxed text-white/60">{detail?.description ?? episode.subtitle}</p>
-            {detail?.keyPoints?.length ? (
-              <>
-                <p className="mb-2 mt-4 text-[11px] font-semibold uppercase tracking-wide text-white/35">Puntos clave</p>
-                <ul className="space-y-1.5">
-                  {detail.keyPoints.map((p) => (
-                    <li key={p} className="flex items-start gap-2 text-sm text-white/70">
-                      <Check className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-emerald-400" />
-                      {p}
+          <BlockFrame
+            title={`Calendario Maestro – ${TOTAL_WEEKS} Semanas de Contenido`}
+            icon="CalendarDays"
+            actions={
+              <div className="hidden items-center gap-0.5 rounded-lg border border-white/12 bg-white/[0.03] p-0.5 sm:flex">
+                <button
+                  type="button"
+                  onClick={() => setView("semanal")}
+                  className={`flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs transition-colors ${
+                    view === "semanal" ? "bg-[var(--allpa-gold-400)]/20 text-[var(--allpa-gold-300)]" : "text-white/45 hover:text-white/75"
+                  }`}
+                >
+                  <LayoutGrid className="h-3.5 w-3.5" />
+                  Semanal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setView("lista")}
+                  className={`flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs transition-colors ${
+                    view === "lista" ? "bg-[var(--allpa-gold-400)]/20 text-[var(--allpa-gold-300)]" : "text-white/45 hover:text-white/75"
+                  }`}
+                >
+                  <List className="h-3.5 w-3.5" />
+                  Lista
+                </button>
+              </div>
+            }
+          >
+            <WeekStrip
+              weeks={Array.from({ length: TOTAL_WEEKS }, (_, i) => ({ week: i + 1, empty: !byWeek.has(i + 1) }))}
+              active={activeWeek}
+              onSelect={setActiveWeek}
+              onToday={() => setActiveWeek(12)}
+            />
+
+            <div className="mt-4">
+              {visibleWeeks.length === 0 ? (
+                <p className="py-8 text-center text-sm text-white/35">No hay semanas que coincidan con la búsqueda.</p>
+              ) : view === "semanal" ? (
+                <WeekCardGrid weeks={visibleWeeks} />
+              ) : (
+                <ul className="divide-y divide-white/[0.06]">
+                  {visibleWeeks.map((w) => (
+                    <li key={w.id}>
+                      <Link href={w.href} className="flex items-center gap-3 py-2.5 transition-colors hover:bg-white/[0.02]">
+                        <span className="w-16 flex-shrink-0 text-xs font-semibold text-white/55">Semana {w.week}</span>
+                        <span className="min-w-0 flex-1 truncate text-sm text-white/85">{w.title}</span>
+                        <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${w.statusClass}`}>{w.status}</span>
+                        <span className="w-14 flex-shrink-0 text-right text-xs tabular-nums text-white/45">
+                          {w.assetsDone}/{w.assetsTotal}
+                        </span>
+                      </Link>
                     </li>
                   ))}
                 </ul>
-              </>
-            ) : null}
+              )}
+            </div>
+
+            <Link
+              href="/contenido/calendario-maestro"
+              className="mt-4 flex items-center justify-center gap-1 text-xs font-medium text-[var(--allpa-gold-300)] hover:underline"
+            >
+              Ver todo el calendario anual
+              <ArrowRight className="h-3 w-3" />
+            </Link>
           </BlockFrame>
 
-          <BlockFrame title="Información General" icon="ClipboardList">
-            {detail?.generalInfo?.length ? (
-              <InfoCard rows={detail.generalInfo} />
-            ) : (
-              <InfoCard
-                rows={[
-                  { label: "Estado", value: episode.status },
-                  { label: "Semana", value: String(episode.week) },
-                  { label: "Invitado", value: episode.guest, person: true },
-                  { label: "Publicación", value: episode.publishDate },
-                ]}
-              />
-            )}
-          </BlockFrame>
-
-          <BlockFrame title="Distribución y Activos Generados" icon="Workflow">
-            {detail?.distributionFlow?.length ? (
-              <FlowStrip
-                steps={detail.distributionFlow}
-                progressValue={episode.progress}
-                progressLabel={`${episode.progress}% completado (${episode.assetsDone}/${episode.assetsTotal} activos)`}
-              />
-            ) : (
-              <NotYet what="activos derivados" />
-            )}
-          </BlockFrame>
-
-          <BlockFrame title="Próximos Pasos" icon="ListChecks">
-            {detail?.nextSteps?.length ? <ChecklistPanel lines={detail.nextSteps} /> : <NotYet what="tareas pendientes" />}
-          </BlockFrame>
-
-          <BlockFrame title="Línea de Tiempo del Episodio" icon="GitCommitHorizontal">
-            {detail?.timeline?.length ? <Timeline steps={detail.timeline} /> : <NotYet what="hitos" />}
+          <BlockFrame
+            title="Pilares de Contenido (Temas Estratégicos)"
+            icon="Target"
+            actions={
+              <Link
+                href="/contenido/temas-estrategicos"
+                className="hidden items-center gap-1 text-xs font-medium text-[var(--allpa-gold-300)] hover:underline sm:flex"
+              >
+                Ver todos los temas
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+            }
+          >
+            <PillarCardGrid pillars={pillarCards} />
+            <p className="mt-4 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-xs text-white/45">
+              Nuestro enfoque: educar hoy, proteger ahora y construir un legado que dure generaciones.
+            </p>
           </BlockFrame>
         </>
-      )}
-
-      {tab === "podcast" && (
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1fr_340px]">
-          <div className="min-w-0 space-y-3">
-            <BlockFrame title="Información del Episodio" icon="Mic">
-              <p className="mb-1 text-[11px] uppercase tracking-wide text-white/35">Título del episodio</p>
-              <p className="mb-4 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white/85">{episode.title}</p>
-              <p className="mb-1 text-[11px] uppercase tracking-wide text-white/35">Descripción</p>
-              <p className="mb-4 text-sm leading-relaxed text-white/60">{detail?.description ?? episode.subtitle}</p>
-              {detail?.seoKeywords?.length ? (
-                <>
-                  <p className="mb-2 text-[11px] uppercase tracking-wide text-white/35">Palabras clave SEO</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {detail.seoKeywords.map((k) => (
-                      <span key={k} className="rounded-full bg-white/8 px-2.5 py-1 text-xs text-white/60">
-                        {k}
-                      </span>
-                    ))}
-                  </div>
-                </>
-              ) : null}
-            </BlockFrame>
-
-            <BlockFrame title="Grabación del Episodio" icon="AudioLines">
-              <MediaPreview
-                media={{
-                  kind: "audio",
-                  title: `Episodio ${episode.week} – ${episode.title}`,
-                  duration: "48:32",
-                  meta: detail ? "Grabado el 15 mar 2027 · Estudio Principal" : "Aún no hay grabación cargada.",
-                  actions: true,
-                }}
-              />
-            </BlockFrame>
-
-            <BlockFrame title="Notas del Episodio" icon="NotebookPen">
-              {detail?.episodeNotes?.length ? (
-                <ul className="space-y-1.5">
-                  {detail.episodeNotes.map((n) => (
-                    <li key={n} className="flex items-start gap-2 text-sm text-white/65">
-                      <span className="mt-1.5 h-1 w-1 flex-shrink-0 rounded-full bg-[var(--allpa-gold-400)]" />
-                      {n}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <NotYet what="notas" />
-              )}
-            </BlockFrame>
-
-            {extraBlocks}
-          </div>
-
-          <div className="space-y-3">
-            <BlockFrame title="Invitado" icon="UserRound">
-              <PersonCard person={detail?.guest ?? { name: episode.guest, role: episode.guestRole }} />
-            </BlockFrame>
-            <BlockFrame title="Detalles de Producción" icon="ClipboardList">
-              {detail?.productionInfo?.length ? <InfoCard rows={detail.productionInfo} /> : <NotYet what="detalles de producción" />}
-            </BlockFrame>
-            <BlockFrame title="Checklist de Producción" icon="ListChecks">
-              {detail?.productionChecklist?.length ? <ChecklistPanel lines={detail.productionChecklist} /> : <NotYet what="checklist" />}
-            </BlockFrame>
-            <BlockFrame title="Recursos del Episodio" icon="FileText">
-              {detail?.episodeResources?.length ? <FileList files={detail.episodeResources} /> : <NotYet what="recursos" />}
-            </BlockFrame>
-          </div>
-        </div>
-      )}
-
-      {tab === "distribucion" && (
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1fr_340px]">
-          <div className="min-w-0 space-y-3">
-            <BlockFrame title="Flujo de Distribución" icon="Workflow">
-              {detail?.distributionFlow?.length ? (
-                <FlowStrip
-                  steps={detail.distributionFlow}
-                  progressValue={episode.progress}
-                  progressLabel={`${episode.progress}% completado (${episode.assetsDone}/${episode.assetsTotal} activos)`}
-                />
-              ) : (
-                <NotYet what="flujo de distribución" />
-              )}
-            </BlockFrame>
-
-            <BlockFrame title="Activos Generados" icon="Boxes">
-              {detail?.assets?.length ? <AssetProgressGrid assets={detail.assets} /> : <NotYet what="activos generados" />}
-              <button
-                type="button"
-                className="mt-3 flex w-full flex-col items-center gap-0.5 rounded-xl border border-dashed border-white/12 py-3 transition-colors hover:border-[var(--allpa-gold-400)]/50"
-              >
-                <span className="flex items-center gap-1.5 text-sm text-[var(--allpa-gold-300)]">
-                  <Plus className="h-4 w-4" />
-                  Crear nuevo activo derivado
-                </span>
-                <span className="text-xs text-white/35">Genera un nuevo activo a partir de este episodio madre.</span>
-              </button>
-            </BlockFrame>
-
-            {extraBlocks}
-          </div>
-
-          <div className="space-y-3">
-            <BlockFrame title="KPIs de este Episodio" icon="TrendingUp">
-              <InfoCard
-                rows={[
-                  { label: "Activos generados", value: `${episode.assetsDone} / ${episode.assetsTotal}` },
-                  { label: "Progreso", value: `${episode.progress}%` },
-                  { label: "Estado", value: episode.status },
-                  { label: "Publicación", value: episode.publishDate },
-                ]}
-              />
-            </BlockFrame>
-            <BlockFrame title="Notas rápidas" icon="StickyNote">
-              <NotesPanel notes={detail?.quickNotes ?? []} />
-            </BlockFrame>
-          </div>
-        </div>
-      )}
-
-      {tab === "notas" && (
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1fr_340px]">
-          <div className="min-w-0 space-y-3">
-            <BlockFrame title="Notas del Episodio" icon="NotebookPen">
-              <RichTextEditor content={detail?.conversationNotes ?? ""} />
-            </BlockFrame>
-
-            <BlockFrame title="Documentos del Episodio" icon="FolderOpen">
-              {detail?.documents?.length ? <FileList files={detail.documents} downloadable /> : <NotYet what="documentos" />}
-            </BlockFrame>
-
-            {extraBlocks}
-          </div>
-
-          <div className="space-y-3">
-            <BlockFrame title="Notas rápidas" icon="StickyNote">
-              <NotesPanel notes={detail?.quickNotes ?? []} />
-            </BlockFrame>
-            <BlockFrame title="Checklist de Documentos" icon="ListChecks">
-              {detail?.documentsChecklist?.length ? <ChecklistPanel lines={detail.documentsChecklist} /> : <NotYet what="checklist" />}
-            </BlockFrame>
-          </div>
-        </div>
-      )}
-
-      {tab === "academia" && (
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1fr_340px]">
-          <div className="min-w-0 space-y-3">
-            <BlockFrame title="Clase en la Academia" icon="GraduationCap">
-              <p className="text-sm leading-relaxed text-white/55">
-                Convierte este episodio en una clase estructurada por módulos y lecciones. Gestiona el catálogo completo desde la
-                página de Academia.
-              </p>
-            </BlockFrame>
-            {extraBlocks}
-          </div>
-
-          <div className="space-y-3">
-            <BlockFrame title="Vista previa de la clase" icon="PlayCircle">
-              <MediaPreview media={{ kind: "video", title: episode.title, subtitle: detail?.guest?.name ?? episode.guest }} />
-            </BlockFrame>
-          </div>
-        </div>
-      )}
-
-      {tab === "metricas" && (
-        <BlockFrame title="Métricas del episodio" icon="TrendingUp">
-          <p className="py-6 text-center text-sm text-white/35">
-            Las métricas reales se activarán cuando conectemos las plataformas de publicación.
-          </p>
-        </BlockFrame>
       )}
 
       <AddBlockDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addBlock} />

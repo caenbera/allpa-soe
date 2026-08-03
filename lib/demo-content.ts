@@ -19,29 +19,118 @@ import type {
 } from "@/lib/content-types";
 
 export const DEMO_PILLARS: Omit<Pillar, "id">[] = [
-  { name: "Protección", tone: "violet", color: "#a78bfa", icon: "ShieldCheck", description: "Educamos sobre seguros que protegen lo que más importa: tu familia, tu salud, tu patrimonio y tu negocio.", weeksPlanned: 17, growth: "12% este trimestre", order: 0 },
-  { name: "Crecimiento", tone: "emerald", color: "#22c55e", icon: "TrendingUp", description: "Impulsamos tu crecimiento financiero y el de tu negocio con estrategias, herramientas y mentalidad.", weeksPlanned: 13, growth: "8% este trimestre", order: 1 },
-  { name: "Protección Legal", tone: "blue", color: "#3b82f6", icon: "Scale", description: "Brindamos información clara sobre tus derechos y tu protección legal personal y empresarial.", weeksPlanned: 13, growth: null, order: 2 },
-  { name: "Negocios Familiares", tone: "amber", color: "#e0a836", icon: "Briefcase", description: "Apoyamos a familias empresarias a construir negocios sólidos, exitosos y que trasciendan generaciones.", weeksPlanned: 7, growth: "5% este trimestre", order: 3 },
-  { name: "Legado Familiar", tone: "rose", color: "#f472b6", icon: "Users", description: "Te ayudamos a construir tu legado y asegurar el bienestar de las próximas generaciones.", weeksPlanned: 7, growth: "3% este trimestre", order: 4 },
-  { name: "Bienestar Integral", tone: "neutral", color: "#94a3b8", icon: "HeartPulse", description: "Promovemos tu bienestar físico, emocional y financiero para una vida plena y equilibrada.", weeksPlanned: 5, growth: null, order: 5 },
+  { name: "Protección", tone: "violet", color: "#a78bfa", icon: "ShieldCheck", description: "Educamos sobre seguros que protegen lo que más importa: tu familia, tu salud, tu patrimonio y tu negocio.", weeksPlanned: 17, growth: "12% este trimestre", order: 0, topics: ["Life Insurance", "Disability Insurance", "Long-Term Care"] },
+  { name: "Crecimiento", tone: "emerald", color: "#22c55e", icon: "TrendingUp", description: "Impulsamos tu crecimiento financiero y el de tu negocio con estrategias, herramientas y mentalidad.", weeksPlanned: 13, growth: "8% este trimestre", order: 1, topics: ["Inversiones", "Retiro", "Annuities"] },
+  { name: "Protección Legal", tone: "blue", color: "#3b82f6", icon: "Scale", description: "Brindamos información clara sobre tus derechos y tu protección legal personal y empresarial.", weeksPlanned: 13, growth: null, order: 2, topics: ["Trusts", "Wills & Estate Planning", "Power of Attorney"] },
+  { name: "Negocios Familiares", tone: "amber", color: "#e0a836", icon: "Briefcase", description: "Apoyamos a familias empresarias a construir negocios sólidos, exitosos y que trasciendan generaciones.", weeksPlanned: 7, growth: "5% este trimestre", order: 3, topics: ["Planificación para Negocios", "Buy-Sell Agreements", "Sucesión Empresarial"] },
+  { name: "Legado Familiar", tone: "rose", color: "#f472b6", icon: "Users", description: "Te ayudamos a construir tu legado y asegurar el bienestar de las próximas generaciones.", weeksPlanned: 7, growth: "3% este trimestre", order: 4, topics: ["Educación Financiera para Hijos", "Valores y Mentalidad", "Filantropía e Impacto"] },
+  { name: "Bienestar Integral", tone: "neutral", color: "#94a3b8", icon: "HeartPulse", description: "Promovemos tu bienestar físico, emocional y financiero para una vida plena y equilibrada.", weeksPlanned: 5, growth: null, order: 5, topics: ["Salud y Prevención", "Equilibrio Financiero", "Bienestar Emocional"] },
+];
+
+const MONTHS_ES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+
+/** La semana 1 del plan 2027 arranca el lunes 4 de enero. */
+function weekStart(week: number) {
+  return new Date(Date.UTC(2027, 0, 4 + (week - 1) * 7));
+}
+
+function shortDate(d: Date) {
+  return `${d.getUTCDate()} ${MONTHS_ES[d.getUTCMonth()]}`;
+}
+
+/** Rango de la semana, ej. "22 – 28 mar". */
+function weekRange(week: number) {
+  const start = weekStart(week);
+  const end = new Date(start.getTime() + 6 * 86_400_000);
+  return `${shortDate(start)} – ${shortDate(end)}`;
+}
+
+/** Los episodios se publican el viernes de su semana. */
+function publishDateOf(week: number) {
+  const d = new Date(weekStart(week).getTime() + 4 * 86_400_000);
+  return `${String(d.getUTCDate()).padStart(2, "0")} ${MONTHS_ES[d.getUTCMonth()]} 2027`;
+}
+
+/**
+ * Las 52 semanas del plan, en forma compacta para que la lista siga siendo
+ * legible: [semana, título, subtítulo, invitado, cargo, pilar, estado, activos generados].
+ * El progreso, el rango de fechas y la fecha de publicación se derivan.
+ */
+type EpisodeSeed = [number, string, string, string, string, string, Episode["status"], number];
+
+const EPISODE_SEEDS: EpisodeSeed[] = [
+  [1, "La verdad sobre el seguro de vida", "Mitos y realidades que debes conocer", "Luis Barajas", "Asesor financiero", "Protección", "Publicado", 9],
+  [2, "Disability Insurance en español", "Protege tus ingresos si no puedes trabajar", "Anthony Aguilar", "Especialista en seguros", "Protección", "Publicado", 9],
+  [3, "Long-Term Care: el plan que tu familia necesita", "Evita ser una carga financiera", "Clara Rodríguez", "Geriatra", "Protección", "Publicado", 9],
+  [4, "Annuities: ingresos garantizados para tu retiro", "Convierte tu ahorro en pagos de por vida", "Ricardo González", "Planificador de retiro", "Crecimiento", "Publicado", 9],
+  [5, "Estate Planning: por dónde empezar", "Documentos esenciales que necesitas", "Luis Hernández", "Abogado patrimonial", "Protección Legal", "Publicado", 9],
+  [6, "Protege tu negocio con Key Person Insurance", "Asegura la continuidad de tu empresa", "Carla Rodríguez", "Consultora de negocios", "Negocios Familiares", "Publicado", 9],
+  [7, "¿Cómo reducir impuestos legalmente?", "Estrategias fiscales para tu familia y negocio", "Mariela Quintero", "Contadora pública", "Crecimiento", "Publicado", 9],
+  [8, "Educación financiera para tus hijos", "Cómo enseñarles a manejar el dinero", "Javier Rivas", "Educador financiero", "Legado Familiar", "Publicado", 9],
+  [9, "Buy-Sell Agreements: protege tu empresa", "Evita conflictos entre socios y familiares", "Miguel Gómez", "Abogado corporativo", "Negocios Familiares", "Publicado", 9],
+  [10, "Impuestos sobre herencias: lo que debes saber", "Planifica antes de que sea tarde", "Pablo Sánchez", "Asesor fiscal", "Crecimiento", "Publicado", 9],
+  [11, "La verdad sobre el seguro de vida", "Mitos y realidades que debes conocer", "Luis Barajas", "Asesor financiero", "Protección", "En producción", 9],
+  [12, "¿Necesito un Trust si no soy millonario?", "Protección legal al alcance de tu familia", "Sonia Muñoz Gallagher", "Abogada de Estate Planning", "Protección Legal", "En producción", 6],
+  [13, "Protege tu ingreso: Disability Insurance", "Qué cubre y cómo elegir la póliza correcta", "Anthony Aguilar", "Especialista en seguros", "Protección", "En producción", 2],
+  [14, "Long-Term Care: el plan que tu familia necesita", "Cuándo contratarlo y cuánto cuesta", "Clara Rodríguez", "Geriatra", "Protección", "En producción", 1],
+  [15, "Annuities: ingresos garantizados para tu retiro", "Convierte tu ahorro en pagos de por vida", "Ricardo González", "Planificador de retiro", "Crecimiento", "En producción", 0],
+  [16, "Wills vs Trusts: cuál necesita tu familia", "Diferencias que casi nadie explica bien", "Sonia Muñoz Gallagher", "Abogada de Estate Planning", "Protección Legal", "En producción", 3],
+  [17, "Power of Attorney: quién decide por ti", "El documento que todos posponen", "Luis Hernández", "Abogado patrimonial", "Protección Legal", "En producción", 2],
+  [18, "Sucesión empresarial sin pleitos familiares", "Cómo preparar el relevo generacional", "Miguel Gómez", "Abogado corporativo", "Negocios Familiares", "En producción", 1],
+  [19, "Inversiones para latinos: por dónde empezar", "Primeros pasos sin miedo ni tecnicismos", "Pablo Sánchez", "Asesor fiscal", "Crecimiento", "Planeado", 0],
+  [20, "Plan de retiro: construye tu libertad financiera", "Cuánto necesitas realmente para retirarte", "Ricardo González", "Planificador de retiro", "Crecimiento", "Planeado", 0],
+  [21, "Deja más que dinero: construye un legado", "Valores que trascienden generaciones", "Javier Rivas", "Educador financiero", "Legado Familiar", "Planeado", 0],
+  [22, "Seguro de salud: elige sin equivocarte", "Cómo comparar planes de verdad", "Clara Rodríguez", "Geriatra", "Protección", "Planeado", 0],
+  [23, "Protege tu patrimonio de demandas", "Estructuras legales que sí funcionan", "Sonia Muñoz Gallagher", "Abogada de Estate Planning", "Protección Legal", "Planeado", 0],
+  [24, "Cómo financiar tu negocio familiar", "Opciones reales más allá del banco", "Carla Rodríguez", "Consultora de negocios", "Negocios Familiares", "Planeado", 0],
+  [25, "Calculadora de retiro: los números que importan", "Aterriza tu plan con cifras concretas", "Ricardo González", "Planificador de retiro", "Crecimiento", "Planeado", 0],
+  [26, "Filantropía familiar: dar con propósito", "Convierte tu éxito en impacto", "Javier Rivas", "Educador financiero", "Legado Familiar", "Planeado", 0],
+  [27, "Seguros para dueños de negocio", "Qué cubrir primero y por qué", "Carla Rodríguez", "Consultora de negocios", "Negocios Familiares", "Planeado", 0],
+  [28, "Bienestar financiero y salud mental", "El costo invisible del estrés económico", "Clara Rodríguez", "Geriatra", "Bienestar Integral", "Planeado", 0],
+  [29, "Herencias: evita el probate en Florida", "Tiempo, costo y estrés que puedes ahorrar", "Luis Hernández", "Abogado patrimonial", "Protección Legal", "Planeado", 0],
+  [30, "Educación universitaria: cómo pagarla", "Planes de ahorro que sí rinden", "Javier Rivas", "Educador financiero", "Legado Familiar", "Planeado", 0],
+  [31, "Diversificación: no pongas todo en un lugar", "Reparte el riesgo con cabeza", "Pablo Sánchez", "Asesor fiscal", "Crecimiento", "Planeado", 0],
+  [32, "Life Insurance como herramienta de ahorro", "Más allá de la protección", "Luis Barajas", "Asesor financiero", "Protección", "Planeado", 0],
+  [33, "Trusts revocables e irrevocables", "Cuál conviene según tu caso", "Sonia Muñoz Gallagher", "Abogada de Estate Planning", "Protección Legal", "Planeado", 0],
+  [34, "Cómo proteger a un hijo con discapacidad", "Special Needs Trust explicado", "Luis Hernández", "Abogado patrimonial", "Protección Legal", "Planeado", 0],
+  [35, "Emprender después de los 50", "Nunca es tarde para construir", "Carla Rodríguez", "Consultora de negocios", "Negocios Familiares", "Planeado", 0],
+  [36, "Seguro de vida para padres mayores", "Opciones cuando la edad avanza", "Luis Barajas", "Asesor financiero", "Protección", "Planeado", 0],
+  [37, "Impuestos: deducciones que sí puedes usar", "Aprovecha lo que la ley permite", "Mariela Quintero", "Contadora pública", "Crecimiento", "Planeado", 0],
+  [38, "Hábitos de bienestar para familias ocupadas", "Salud sostenible sin culpa", "Clara Rodríguez", "Geriatra", "Bienestar Integral", "Planeado", 0],
+  [39, "Reunión familiar patrimonial: cómo hacerla", "Conversaciones difíciles bien llevadas", "Javier Rivas", "Educador financiero", "Legado Familiar", "Planeado", 0],
+  [40, "Compra de vivienda: prepárate financieramente", "Del enganche al cierre", "Pablo Sánchez", "Asesor fiscal", "Crecimiento", "Planeado", 0],
+  [41, "Protección de activos para profesionales", "Médicos, abogados y consultores", "Sonia Muñoz Gallagher", "Abogada de Estate Planning", "Protección Legal", "Planeado", 0],
+  [42, "Cómo elegir a tu Trustee", "La decisión que define tu plan", "Luis Hernández", "Abogado patrimonial", "Protección Legal", "Planeado", 0],
+  [43, "Sociedades familiares: ventajas y riesgos", "Estructura tu negocio con visión", "Miguel Gómez", "Abogado corporativo", "Negocios Familiares", "Planeado", 0],
+  [44, "Retiro anticipado: ¿es posible?", "Los números detrás del sueño", "Ricardo González", "Planificador de retiro", "Crecimiento", "Planeado", 0],
+  [45, "Mentalidad de abundancia con los pies en la tierra", "Psicología del dinero para familias", "Javier Rivas", "Educador financiero", "Bienestar Integral", "Planeado", 0],
+  [46, "Seguro de negocio: interrupción y continuidad", "Qué pasa si tu empresa para", "Carla Rodríguez", "Consultora de negocios", "Negocios Familiares", "Planeado", 0],
+  [47, "Planificación fiscal de fin de año", "Movimientos antes del 31 de diciembre", "Mariela Quintero", "Contadora pública", "Crecimiento", "Planeado", 0],
+  [48, "Cuidado de padres mayores: el plan financiero", "La generación sándwich", "Clara Rodríguez", "Geriatra", "Protección", "Planeado", 0],
+  [49, "Documenta tu legado: cartas y valores", "Lo que el dinero no transmite", "Javier Rivas", "Educador financiero", "Legado Familiar", "Planeado", 0],
+  [50, "Revisión anual de tu plan patrimonial", "Qué actualizar cada año", "Sonia Muñoz Gallagher", "Abogada de Estate Planning", "Protección Legal", "Planeado", 0],
+  [51, "Balance vida-trabajo para emprendedores", "Sostener el negocio sin perderte", "Carla Rodríguez", "Consultora de negocios", "Bienestar Integral", "Pausado", 0],
+  [52, "Cierre de año: celebra y proyecta", "Balance del año y metas del siguiente", "Luis Barajas", "Asesor financiero", "Bienestar Integral", "Pausado", 0],
 ];
 
 /** Los episodios referencian los pilares por nombre; el seed los resuelve a IDs reales. */
-export const DEMO_EPISODES: (Omit<Episode, "id" | "pillarId"> & { pillarName: string })[] = [
-  { week: 1, title: "La verdad sobre el seguro de vida", subtitle: "Mitos y realidades que debes conocer", guest: "Luis Barajas", guestRole: "Asesor financiero", pillarName: "Protección", status: "Publicado", progress: 100, assetsDone: 10, assetsTotal: 10, publishDate: "08 ene 2027", order: 0 },
-  { week: 2, title: "¿Necesito un Trust si no soy millonario?", subtitle: "Por qué los Trusts son para todos", guest: "Sonia Muñoz", guestRole: "Abogada de Estate Planning", pillarName: "Protección Legal", status: "En producción", progress: 60, assetsDone: 6, assetsTotal: 10, publishDate: "15 ene 2027", order: 1 },
-  { week: 3, title: "Disability Insurance en español", subtitle: "Protege tus ingresos si no puedes trabajar", guest: "Anthony Aguilar", guestRole: "Especialista en seguros", pillarName: "Protección", status: "En producción", progress: 50, assetsDone: 5, assetsTotal: 10, publishDate: "22 ene 2027", order: 2 },
-  { week: 4, title: "Long-Term Care: el plan que tu familia necesita", subtitle: "Evita ser una carga financiera", guest: "Clara Rodríguez", guestRole: "Geriatra", pillarName: "Protección", status: "Planeado", progress: 20, assetsDone: 2, assetsTotal: 10, publishDate: "29 ene 2027", order: 3 },
-  { week: 5, title: "Annuities: ingresos garantizados para tu retiro", subtitle: "Convierte tu ahorro en pagos de por vida", guest: "Ricardo González", guestRole: "Planificador de retiro", pillarName: "Crecimiento", status: "Planeado", progress: 10, assetsDone: 1, assetsTotal: 10, publishDate: "05 feb 2027", order: 4 },
-  { week: 6, title: "Protege tu negocio con Key Person Insurance", subtitle: "Asegura la continuidad de tu empresa", guest: "Carla Rodríguez", guestRole: "Consultora de negocios", pillarName: "Negocios Familiares", status: "En producción", progress: 40, assetsDone: 4, assetsTotal: 10, publishDate: "12 feb 2027", order: 5 },
-  { week: 7, title: "Estate Planning: por dónde empezar", subtitle: "Documentos esenciales que necesitas", guest: "Luis Hernández", guestRole: "Abogado patrimonial", pillarName: "Protección Legal", status: "Planeado", progress: 0, assetsDone: 0, assetsTotal: 10, publishDate: "19 feb 2027", order: 6 },
-  { week: 8, title: "¿Cómo reducir impuestos legalmente?", subtitle: "Estrategias fiscales para tu familia y negocio", guest: "Mariela Quintero", guestRole: "Contadora pública", pillarName: "Crecimiento", status: "Planeado", progress: 0, assetsDone: 0, assetsTotal: 10, publishDate: "26 feb 2027", order: 7 },
-  { week: 9, title: "Educación financiera para tus hijos", subtitle: "Cómo enseñarles a manejar el dinero", guest: "Javier Rivas", guestRole: "Educador financiero", pillarName: "Legado Familiar", status: "Planeado", progress: 0, assetsDone: 0, assetsTotal: 10, publishDate: "05 mar 2027", order: 8 },
-  { week: 10, title: "Buy-Sell Agreements: protege tu empresa", subtitle: "Evita conflictos entre socios y familiares", guest: "Miguel Gómez", guestRole: "Abogado corporativo", pillarName: "Negocios Familiares", status: "Pausado", progress: 0, assetsDone: 0, assetsTotal: 10, publishDate: "—", order: 9 },
-  { week: 11, title: "Impuestos sobre herencias: lo que debes saber", subtitle: "Planifica antes de que sea tarde", guest: "Pablo Sánchez", guestRole: "Asesor fiscal", pillarName: "Crecimiento", status: "Planeado", progress: 5, assetsDone: 0, assetsTotal: 10, publishDate: "12 mar 2027", order: 10 },
-  { week: 12, title: "¿Necesito un Trust si no soy millonario?", subtitle: "Protección legal al alcance de tu familia", guest: "Sonia Muñoz", guestRole: "Abogada de Estate Planning", pillarName: "Protección Legal", status: "En producción", progress: 78, assetsDone: 7, assetsTotal: 10, publishDate: "22 mar 2027", order: 11 },
-];
+export const DEMO_EPISODES: (Omit<Episode, "id" | "pillarId"> & { pillarName: string })[] = EPISODE_SEEDS.map(
+  ([week, title, subtitle, guest, guestRole, pillarName, status, assetsDone], i) => ({
+    week,
+    title,
+    subtitle,
+    guest,
+    guestRole,
+    pillarName,
+    status,
+    progress: Math.round((assetsDone / 9) * 100),
+    assetsDone,
+    assetsTotal: 9,
+    dateRange: weekRange(week),
+    publishDate: status === "Pausado" ? "—" : publishDateOf(week),
+    order: i,
+  })
+);
 
 export const DEMO_DERIVED: (Omit<DerivedContent, "id" | "pillarId"> & { pillarName: string })[] = [
   { title: "La verdad sobre el seguro de vida | Reel", subtitle: "Video corto para redes sociales", episodeTitle: "La verdad sobre el seguro de vida", episodeWeek: 1, format: "Video corto", formatMeta: "0:45", channels: ["Camera", "MessageCircle", "Music2"], pillarName: "Protección", status: "Publicado", publishDate: "10 ene 2027", order: 0 },

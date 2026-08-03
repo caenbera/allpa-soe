@@ -1,5 +1,5 @@
 import { Clock } from "lucide-react";
-import { pageRegistry } from "@/lib/page-registry";
+import { resolvePage } from "@/lib/page-registry";
 
 export default async function DynamicCompanyPage({
   params,
@@ -8,9 +8,9 @@ export default async function DynamicCompanyPage({
 }) {
   const { blockSlug, pageSlugs } = await params;
   const path = `/${blockSlug}/${pageSlugs.join("/")}`;
-  const PageComponent = pageRegistry[path];
+  const page = resolvePage(path);
 
-  if (PageComponent) return <PageComponent />;
+  if (page) return page;
 
   return (
     <div className="mx-auto flex max-w-lg flex-col items-center px-4 py-24 text-center">

@@ -10,6 +10,11 @@ import { AssetProgressGrid, type AssetCard } from "@/components/page-blocks/bloc
 import { PersonCard, type PersonInfo } from "@/components/page-blocks/blocks/PersonCard";
 import { Timeline, type TimelineStep } from "@/components/page-blocks/blocks/Timeline";
 import { MediaPreview, type MediaInfo } from "@/components/page-blocks/blocks/MediaPreview";
+import { WeekCardGrid, type WeekCardData } from "@/components/page-blocks/blocks/WeekCardGrid";
+import { PillarCardGrid, type PillarCardData } from "@/components/page-blocks/blocks/PillarCardGrid";
+import { EcosystemHub, type EcosystemSpoke } from "@/components/page-blocks/blocks/EcosystemHub";
+import { KpiProgressList, type KpiProgressRow } from "@/components/page-blocks/blocks/KpiProgressList";
+import { UpcomingEpisodes, type UpcomingEpisode } from "@/components/page-blocks/blocks/UpcomingEpisodes";
 import type { BlockInstance, BlockType } from "@/lib/block-types";
 
 export interface BlockRegistryEntry {
@@ -94,6 +99,36 @@ export const blockRegistry: Partial<Record<BlockType, BlockRegistryEntry>> = {
     render: (block) => {
       const steps = (block.config as TimelineStep[]) ?? [];
       return steps.length ? <Timeline steps={steps} /> : EMPTY_HINT;
+    },
+  },
+  "week-cards": {
+    render: (block) => {
+      const weeks = (block.config as WeekCardData[]) ?? [];
+      return weeks.length ? <WeekCardGrid weeks={weeks} /> : EMPTY_HINT;
+    },
+  },
+  "pillar-cards": {
+    render: (block) => {
+      const pillars = (block.config as PillarCardData[]) ?? [];
+      return pillars.length ? <PillarCardGrid pillars={pillars} /> : EMPTY_HINT;
+    },
+  },
+  "ecosystem-hub": {
+    render: (block) => {
+      const cfg = block.config as { center: { label: string; sub: string; icon: string }; spokes: EcosystemSpoke[] } | null;
+      return cfg?.spokes?.length ? <EcosystemHub center={cfg.center} spokes={cfg.spokes} /> : EMPTY_HINT;
+    },
+  },
+  "kpi-progress": {
+    render: (block) => {
+      const rows = (block.config as KpiProgressRow[]) ?? [];
+      return rows.length ? <KpiProgressList rows={rows} /> : EMPTY_HINT;
+    },
+  },
+  "upcoming-episodes": {
+    render: (block) => {
+      const episodes = (block.config as UpcomingEpisode[]) ?? [];
+      return episodes.length ? <UpcomingEpisodes episodes={episodes} /> : EMPTY_HINT;
     },
   },
   "media-preview": {

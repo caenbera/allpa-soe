@@ -21,12 +21,12 @@ const initialSections: AccordionSectionData[] = [
     richContent:
       "<h3>Objetivo del episodio</h3><p>Educar a la audiencia sobre un tema relevante del sector y dejar 2-3 aprendizajes accionables.</p><h3>Estructura del episodio</h3><ul><li>Introducción (0:00 – 2:00)</li><li>Contexto del problema (2:00 – 15:00)</li><li>Soluciones y estrategias (15:00 – 35:00)</li><li>Preguntas del invitado (35:00 – 50:00)</li><li>Cierre y CTA (50:00 – 55:00)</li></ul>",
     checklist: [
-      { id: "1", text: "Definir tema y ángulo del episodio", status: "completado", assignee: "Ana Torres", dueDate: "18 may", notes: [] },
-      { id: "2", text: "Investigación y recopilación de datos", status: "completado", assignee: "Luis Peña", dueDate: "19 may", notes: [] },
-      { id: "3", text: "Crear esquema del episodio", status: "completado", assignee: "Ana Torres", dueDate: "20 may", notes: [] },
-      { id: "4", text: "Lista de preguntas para el invitado", status: "completado", assignee: "Luis Peña", dueDate: "21 may", notes: [] },
-      { id: "5", text: "Revisar y aprobar guion", status: "pendiente", assignee: "Ana Torres", dueDate: "23 may", notes: [] },
-      { id: "6", text: "Enviar guion al invitado", status: "pendiente", assignee: "Luis Peña", dueDate: "24 may", notes: [] },
+      { id: "1", text: "Definir tema y ángulo del episodio", status: "completado", assignee: "Ana Torres", dueDate: "2026-05-18", notes: [] },
+      { id: "2", text: "Investigación y recopilación de datos", status: "completado", assignee: "Luis Peña", dueDate: "2026-05-19", notes: [] },
+      { id: "3", text: "Crear esquema del episodio", status: "completado", assignee: "Ana Torres", dueDate: "2026-05-20", notes: [] },
+      { id: "4", text: "Lista de preguntas para el invitado", status: "completado", assignee: "Luis Peña", dueDate: "2026-05-21", notes: [] },
+      { id: "5", text: "Revisar y aprobar guion", status: "pendiente", assignee: "Ana Torres", dueDate: "2026-05-23", notes: [] },
+      { id: "6", text: "Enviar guion al invitado", status: "pendiente", assignee: "Luis Peña", dueDate: "2026-05-24", notes: [] },
     ],
   },
   { id: "produccion", title: "2. Producción y Grabación", icon: "Video", status: "pendiente", priority: "media", assignees: ["Ana Torres"], richContent: "", checklist: [] },

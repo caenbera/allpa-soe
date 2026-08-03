@@ -17,6 +17,12 @@ export const STATUS_CONFIG: Record<SectionStatus, { label: string; dot: string; 
   completado: { label: "Completado", dot: "bg-emerald-400", text: "text-emerald-300", bg: "bg-emerald-400/10" },
 };
 
+/**
+ * Pastilla de estado. Si se le pasa `onChange` funciona controlada — el
+ * estado lo manda el padre, así el badge siempre refleja cambios externos
+ * (por ejemplo, marcar la casilla de una tarea). Sin `onChange` mantiene su
+ * propio estado para los usos sueltos.
+ */
 export function StatusBadge({
   status,
   onChange,
@@ -26,7 +32,8 @@ export function StatusBadge({
   onChange?: (status: SectionStatus) => void;
   interactive?: boolean;
 }) {
-  const [current, setCurrent] = useState(status);
+  const [local, setLocal] = useState(status);
+  const current = onChange ? status : local;
   const cfg = STATUS_CONFIG[current];
 
   const pill = (
@@ -47,7 +54,7 @@ export function StatusBadge({
           <DropdownMenuItem
             key={s}
             onClick={() => {
-              setCurrent(s);
+              setLocal(s);
               onChange?.(s);
             }}
           >

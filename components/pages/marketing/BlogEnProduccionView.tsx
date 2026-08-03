@@ -19,10 +19,10 @@ const initialSections: AccordionSectionData[] = [
     richContent:
       "<h3>Objetivo del bloque</h3><p>Define claramente el enfoque del artículo y asegura que el contenido responda a las preguntas que tiene nuestra audiencia.</p>",
     checklist: [
-      { id: "1", text: "Definir objetivo del artículo", status: "completado", assignee: "Ana Torres", dueDate: "10 may", notes: [] },
-      { id: "2", text: "Investigación de temas y fuentes", status: "completado", assignee: "Luis Peña", dueDate: "12 may", notes: [] },
-      { id: "3", text: "Definir keyword principal y secundarias", status: "en_revision", assignee: "SEO Team", dueDate: "13 may", notes: [] },
-      { id: "4", text: "Crear esquema del artículo (outline)", status: "pendiente", assignee: "Luis Peña", dueDate: "14 may", notes: [] },
+      { id: "1", text: "Definir objetivo del artículo", status: "completado", assignee: "Ana Torres", dueDate: "2026-05-10", notes: [] },
+      { id: "2", text: "Investigación de temas y fuentes", status: "completado", assignee: "Luis Peña", dueDate: "2026-05-12", notes: [] },
+      { id: "3", text: "Definir keyword principal y secundarias", status: "en_revision", assignee: "SEO Team", dueDate: "2026-05-13", notes: [] },
+      { id: "4", text: "Crear esquema del artículo (outline)", status: "pendiente", assignee: "Luis Peña", dueDate: "2026-05-14", notes: [] },
     ],
   },
   {
@@ -34,23 +34,23 @@ const initialSections: AccordionSectionData[] = [
     assignees: ["Luis Peña"],
     richContent: "<p>Redactar el cuerpo del artículo siguiendo el outline aprobado, con tono cercano y ejemplos concretos.</p>",
     checklist: [
-      { id: "1", text: "Redactar introducción", status: "completado", assignee: "Luis Peña", dueDate: "16 may", notes: [] },
-      { id: "2", text: "Redactar cuerpo del artículo", status: "en_progreso", assignee: "Luis Peña", dueDate: "19 may", notes: [] },
-      { id: "3", text: "Redactar cierre y CTA", status: "pendiente", assignee: "Luis Peña", dueDate: "20 may", notes: [] },
+      { id: "1", text: "Redactar introducción", status: "completado", assignee: "Luis Peña", dueDate: "2026-05-16", notes: [] },
+      { id: "2", text: "Redactar cuerpo del artículo", status: "en_progreso", assignee: "Luis Peña", dueDate: "2026-05-19", notes: [] },
+      { id: "3", text: "Redactar cierre y CTA", status: "pendiente", assignee: "Luis Peña", dueDate: "2026-05-20", notes: [] },
     ],
   },
   { id: "seo", title: "3. Optimización SEO", icon: "SearchCheck", status: "en_revision", priority: "media", assignees: ["SEO Team"], richContent: "", checklist: [
-    { id: "1", text: "Revisar densidad de keywords", status: "en_revision", assignee: "SEO Team", dueDate: "21 may", notes: [] },
-    { id: "2", text: "Optimizar meta título y descripción", status: "pendiente", assignee: "SEO Team", dueDate: "21 may", notes: [] },
+    { id: "1", text: "Revisar densidad de keywords", status: "en_revision", assignee: "SEO Team", dueDate: "2026-05-21", notes: [] },
+    { id: "2", text: "Optimizar meta título y descripción", status: "pendiente", assignee: "SEO Team", dueDate: "2026-05-21", notes: [] },
   ] },
   { id: "diseno", title: "4. Diseño y Recursos", icon: "Image", status: "pendiente", priority: "media", assignees: ["Ana Torres"], richContent: "", checklist: [
-    { id: "1", text: "Seleccionar imagen destacada", status: "pendiente", assignee: "Ana Torres", dueDate: "22 may", notes: [] },
+    { id: "1", text: "Seleccionar imagen destacada", status: "pendiente", assignee: "Ana Torres", dueDate: "2026-05-22", notes: [] },
   ] },
   { id: "revision", title: "5. Revisión y Aprobación", icon: "CheckCircle2", status: "pendiente", priority: "alta", assignees: ["Ana Torres"], richContent: "", checklist: [
-    { id: "1", text: "Revisión editorial final", status: "pendiente", assignee: "Ana Torres", dueDate: "23 may", notes: [] },
+    { id: "1", text: "Revisión editorial final", status: "pendiente", assignee: "Ana Torres", dueDate: "2026-05-23", notes: [] },
   ] },
   { id: "publicacion", title: "6. Publicación", icon: "Send", status: "pendiente", priority: "alta", assignees: ["Luis Peña"], richContent: "", checklist: [
-    { id: "1", text: "Programar publicación", status: "pendiente", assignee: "Luis Peña", dueDate: "25 may", notes: [] },
+    { id: "1", text: "Programar publicación", status: "pendiente", assignee: "Luis Peña", dueDate: "2026-05-25", notes: [] },
   ] },
 ];
 

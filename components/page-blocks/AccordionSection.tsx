@@ -34,9 +34,17 @@ export interface AccordionSectionData {
  * editor enriquecido ("Desarrollo del bloque") siempre debajo — nunca
  * al lado, sin importar el ancho de pantalla.
  */
-export function AccordionSection({ data: initialData, onDelete }: { data: AccordionSectionData; onDelete?: () => void }) {
+export function AccordionSection({
+  data,
+  onChange,
+  onDelete,
+}: {
+  data: AccordionSectionData;
+  /** Cambios de la sección; la página los persiste. */
+  onChange?: (patch: Partial<AccordionSectionData>) => void;
+  onDelete?: () => void;
+}) {
   const [open, setOpen] = useState(false);
-  const [data, setData] = useState(initialData);
   const [editOpen, setEditOpen] = useState(false);
   const Icon = resolveLucideIcon(data.icon);
   const doneCount = data.checklist.filter((i) => i.status === "completado").length;
@@ -62,7 +70,7 @@ export function AccordionSection({ data: initialData, onDelete }: { data: Accord
         </button>
 
         <div className="hidden items-center gap-3 sm:flex">
-          <StatusBadge status={data.status} />
+          <StatusBadge status={data.status} onChange={(status) => onChange?.({ status })} />
           <PriorityFlag priority={data.priority} />
           <AvatarStack names={data.assignees} onAdd={() => setEditOpen(true)} />
         </div>
@@ -91,11 +99,11 @@ export function AccordionSection({ data: initialData, onDelete }: { data: Accord
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-white/35">Checklist</p>
           <ChecklistTable
             items={data.checklist}
-            onItemsChange={(updater) => setData((d) => ({ ...d, checklist: updater(d.checklist) }))}
+            onItemsChange={(updater) => onChange?.({ checklist: updater(data.checklist) })}
           />
 
           <p className="mb-2 mt-6 text-[11px] font-semibold uppercase tracking-wide text-white/35">Desarrollo del bloque</p>
-          <RichTextEditor content={data.richContent} />
+          <RichTextEditor content={data.richContent} onChange={(richContent) => onChange?.({ richContent })} />
         </div>
       )}
 
@@ -104,7 +112,7 @@ export function AccordionSection({ data: initialData, onDelete }: { data: Accord
           open={editOpen}
           onOpenChange={setEditOpen}
           initialValues={{ title: data.title, icon: data.icon, priority: data.priority, assignees: data.assignees }}
-          onSave={(values) => setData((d) => ({ ...d, ...values }))}
+          onSave={(values) => onChange?.(values)}
         />
       )}
     </div>

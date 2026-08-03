@@ -10,7 +10,12 @@ import { Label } from "@/components/ui/label";
 import { IconPickerGrid } from "@/components/page-blocks/IconPickerGrid";
 import { resolveLucideIcon } from "@/lib/lucide-icon";
 import { BLOCK_TYPE_CATALOG, type BlockType } from "@/lib/block-types";
-import type { NewBlockInput } from "@/lib/use-blocks";
+
+export interface NewBlockInput {
+  type: BlockType;
+  title: string;
+  icon: string;
+}
 
 export function AddBlockDialog({
   open,

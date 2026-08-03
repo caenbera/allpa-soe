@@ -6,7 +6,6 @@ import { PageShell, StatCard } from "@/components/page-blocks/PageShell";
 import { MetaBar } from "@/components/page-blocks/MetaBar";
 import { AccordionSection, AddSectionButton, type AccordionSectionData } from "@/components/page-blocks/AccordionSection";
 import { CreateSectionDialog } from "@/components/page-blocks/CreateSectionDialog";
-import { useSectionsState } from "@/lib/use-sections";
 import { usePageConfig } from "@/lib/use-page-config";
 
 const initialSections: AccordionSectionData[] = [
@@ -92,8 +91,11 @@ const DEFAULT_META_FIELDS = [
 ];
 
 export function InstagramView() {
-  const { sections, addSection, removeSection } = useSectionsState(initialSections);
-  const { metaFields, updateMetaFields } = usePageConfig("/marketing/redes-sociales/instagram", DEFAULT_META_FIELDS);
+  const { metaFields, updateMetaFields, sections, addSection, updateSection, removeSection } = usePageConfig(
+    "/marketing/redes-sociales/instagram",
+    DEFAULT_META_FIELDS,
+    initialSections
+  );
   const [createOpen, setCreateOpen] = useState(false);
 
   return (
@@ -106,7 +108,12 @@ export function InstagramView() {
     >
       <MetaBar fields={metaFields} onFieldsChange={updateMetaFields} />
       {sections.map((s) => (
-        <AccordionSection key={s.id} data={s} onDelete={() => removeSection(s.id)} />
+        <AccordionSection
+          key={s.id}
+          data={s}
+          onChange={(patch) => updateSection(s.id, patch)}
+          onDelete={() => removeSection(s.id)}
+        />
       ))}
       <AddSectionButton onClick={() => setCreateOpen(true)} />
       <CreateSectionDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addSection} />

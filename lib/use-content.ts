@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuthStore } from "@/store/auth";
 import { firebaseReady } from "@/lib/firebase";
 import { listContent, createContent, updateContent, deleteContent } from "@/lib/services/content";
-import type { ContentCollection } from "@/lib/content-types";
+import type { CompanyCollection } from "@/lib/services/content";
 
 export interface ContentState<T> {
   items: T[];
@@ -18,7 +18,7 @@ export interface ContentState<T> {
 }
 
 /** Lee una colección del módulo Contenido de la empresa activa. */
-export function useContent<T extends { id: string }>(name: ContentCollection): ContentState<T> {
+export function useContent<T extends { id: string }>(name: CompanyCollection): ContentState<T> {
   const { companyId } = useAuthStore();
   // `null` = todavía no se ha leído; así el estado de carga se deriva en vez
   // de guardarse, y el efecto no llama a setState de forma síncrona.

@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, ChevronsUpDown, Eye, MoreHorizontal } from "lucide-react";
 import { resolveLucideIcon } from "@/lib/lucide-icon";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
+import { ScoreRing } from "@/components/page-blocks/blocks/ScoreRing";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +22,18 @@ export type Cell =
   | { kind: "person"; name: string; role?: string }
   | { kind: "progress"; value: number; label?: string }
   | { kind: "icons"; icons: string[]; muted?: boolean }
-  | { kind: "index"; value: string };
+  | { kind: "index"; value: string }
+  | { kind: "score"; value: number }
+  | { kind: "toggle"; value: boolean; onChange?: (next: boolean) => void }
+  | { kind: "initials"; value: string; color: string; label: string; sub?: string }
+  | { kind: "stacked"; value: string; sub: string }
+  | { kind: "dateWithSub"; value: string; sub: string; urgent?: boolean }
+  /** Cadena de pasos de una automatización, con su espera entre ellos. */
+  | { kind: "actionChain"; steps: { icon: string; delay?: string }[] }
+  /** Icono con etiqueta, ej. la fuente por la que llegó un contacto. */
+  | { kind: "source"; icon: string; value: string; sub?: string }
+  /** Punto de color + texto, ej. la última actividad. */
+  | { kind: "activity"; value: string; sub?: string; color?: string };
 
 export type BadgeTone = "gold" | "emerald" | "amber" | "blue" | "violet" | "rose" | "neutral";
 
@@ -67,7 +80,16 @@ function sortValue(cell: Cell | undefined): string | number {
       return cell.name.toLowerCase();
     case "icons":
       return cell.icons.length;
-    case "number": {
+    case "score":
+      return cell.value;
+    case "toggle":
+      return cell.value ? 1 : 0;
+    case "actionChain":
+      return cell.steps.length;
+    case "initials":
+      return cell.label.toLowerCase();
+    case "number":
+    case "stacked": {
       const n = Number(cell.value.replace(/[^\d.-]/g, ""));
       return Number.isNaN(n) ? cell.value.toLowerCase() : n;
     }
@@ -138,6 +160,84 @@ function CellView({ cell }: { cell: Cell | undefined }) {
               </span>
             );
           })}
+        </span>
+      );
+    case "score":
+      return <ScoreRing value={cell.value} />;
+    case "toggle":
+      return <Switch checked={cell.value} onCheckedChange={(next) => cell.onChange?.(Boolean(next))} />;
+    case "initials":
+      return (
+        <span className="flex min-w-0 items-center gap-2.5">
+          <span
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-[11px] font-bold text-white"
+            style={{ background: cell.color }}
+          >
+            {cell.value}
+          </span>
+          <span className="min-w-0">
+            <span className="block truncate font-medium text-white/90">{cell.label}</span>
+            {cell.sub && <span className="block truncate text-xs text-white/35">{cell.sub}</span>}
+          </span>
+        </span>
+      );
+    case "stacked":
+      return (
+        <span className="block min-w-0">
+          <span className="block truncate tabular-nums text-white/85">{cell.value}</span>
+          <span className="block truncate text-xs text-white/35">{cell.sub}</span>
+        </span>
+      );
+    case "dateWithSub":
+      return (
+        <span className="block min-w-0">
+          <span className="block truncate text-white/80">{cell.value}</span>
+          <span className={`block truncate text-xs ${cell.urgent ? "text-amber-400" : "text-white/35"}`}>{cell.sub}</span>
+        </span>
+      );
+    case "actionChain":
+      return (
+        <span className="flex items-center gap-1">
+          {cell.steps.map((step, i) => {
+            const Icon = resolveLucideIcon(step.icon);
+            return (
+              <span key={`${step.icon}-${i}`} className="flex items-center gap-1">
+                {i > 0 && <span className="text-white/20">→</span>}
+                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-white/8 text-white/60">
+                  <Icon className="h-3 w-3" />
+                </span>
+                {step.delay && <span className="text-[10px] text-white/35">{step.delay}</span>}
+              </span>
+            );
+          })}
+        </span>
+      );
+    case "source": {
+      const Icon = resolveLucideIcon(cell.icon);
+      return (
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md bg-white/8 text-white/55">
+            {/* eslint-disable-next-line react-hooks/static-components -- selecciona un icono existente por nombre, no crea un componente nuevo */}
+            <Icon className="h-3 w-3" />
+          </span>
+          <span className="min-w-0">
+            <span className="block truncate text-white/75">{cell.value}</span>
+            {cell.sub && <span className="block truncate text-xs text-white/35">{cell.sub}</span>}
+          </span>
+        </span>
+      );
+    }
+    case "activity":
+      return (
+        <span className="flex min-w-0 items-start gap-2">
+          <span
+            className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full"
+            style={{ background: cell.color ?? "#22c55e" }}
+          />
+          <span className="min-w-0">
+            <span className="block truncate text-white/75">{cell.value}</span>
+            {cell.sub && <span className="block truncate text-xs text-white/35">{cell.sub}</span>}
+          </span>
         </span>
       );
   }

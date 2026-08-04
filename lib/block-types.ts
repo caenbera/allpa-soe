@@ -34,7 +34,20 @@ export type BlockType =
   | "pillar-cards"
   | "ecosystem-hub"
   | "kpi-progress"
-  | "upcoming-episodes";
+  | "upcoming-episodes"
+  | "score-ring"
+  | "tag-cloud"
+  | "stat-tiles"
+  | "activity-feed"
+  | "ranked-bars"
+  | "insight-list"
+  | "profile-header"
+  | "detail-drawer"
+  | "line-chart"
+  | "column-chart"
+  | "kanban-board"
+  | "relationship-graph"
+  | "org-chart";
 
 export interface BlockInstance<TConfig = unknown> {
   id: string;
@@ -81,6 +94,19 @@ export const BLOCK_TYPE_CATALOG: BlockTypeDef[] = [
   { type: "ecosystem-hub", label: "Ecosistema de contenido", description: "Diagrama radial de un episodio a sus activos.", icon: "Share2" },
   { type: "kpi-progress", label: "Indicadores con barra", description: "Métricas con su progreso.", icon: "TrendingUp" },
   { type: "upcoming-episodes", label: "Próximos episodios", description: "Las siguientes semanas del plan.", icon: "CalendarClock" },
+  { type: "score-ring", label: "Anillo de puntaje", description: "Puntaje de 0 a 100 con color por tramo.", icon: "Gauge" },
+  { type: "tag-cloud", label: "Etiquetas", description: "Chips de colores que se agregan y quitan.", icon: "Tags" },
+  { type: "stat-tiles", label: "Tarjetas de métrica", description: "Cifras apiladas con icono y variación.", icon: "LayoutGrid" },
+  { type: "activity-feed", label: "Registro de actividad", description: "Llamadas, emails, reuniones y cambios.", icon: "History" },
+  { type: "ranked-bars", label: "Ranking con barras", description: "Comparativa ordenada de mayor a menor.", icon: "BarChart3" },
+  { type: "insight-list", label: "Hallazgos", description: "Conclusiones en lenguaje llano.", icon: "Lightbulb" },
+  { type: "profile-header", label: "Encabezado de ficha", description: "Avatar, estado y datos de un registro.", icon: "IdCard" },
+  { type: "detail-drawer", label: "Panel de detalle", description: "Ficha lateral con secciones plegables.", icon: "PanelRight" },
+  { type: "line-chart", label: "Gráfico de líneas", description: "Evolución en el tiempo.", icon: "TrendingUp" },
+  { type: "column-chart", label: "Gráfico de columnas", description: "Volumen por periodo.", icon: "BarChart4" },
+  { type: "kanban-board", label: "Tablero por etapas", description: "Tarjetas arrastrables entre columnas.", icon: "Columns3" },
+  { type: "relationship-graph", label: "Grafo de relaciones", description: "Personas, empresas y productos conectados.", icon: "Workflow" },
+  { type: "org-chart", label: "Organigrama", description: "Estructura jerárquica con participación.", icon: "Network" },
 ];
 
 export function getBlockTypeDef(type: BlockType): BlockTypeDef | undefined {

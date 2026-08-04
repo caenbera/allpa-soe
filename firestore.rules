@@ -107,6 +107,55 @@ service cloud.firestore {
         allow write: if isCompanyMember(companyId);
       }
 
+      // ── Módulo CRM ──
+      // Mismo criterio de aislamiento por empresa que el módulo Contenido.
+      // El prefijo `crm` evita confundir estas empresas (las del CRM) con la
+      // colección raíz `companies`, que son las inquilinas de la plataforma.
+      match /crmContacts/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /crmAccounts/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /crmFamilies/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /crmRelationships/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /crmDeals/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /crmActivities/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /crmProducts/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /crmAgreements/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /crmTags/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /crmSegments/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /crmAutomations/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+
       // Personalización de cada página: características visibles y bloques
       // agregados por el administrador.
       match /pageConfig/{pageKey} {

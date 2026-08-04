@@ -11,6 +11,10 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { ContentCollection } from "@/lib/content-types";
+import type { CrmCollection } from "@/lib/crm-types";
+
+/** Cualquier subcolección de datos de una empresa: Contenido o CRM. */
+export type CompanyCollection = ContentCollection | CrmCollection;
 
 /**
  * CRUD genérico sobre las colecciones del módulo Contenido. Todas comparten
@@ -18,18 +22,18 @@ import type { ContentCollection } from "@/lib/content-types";
  * sirve para episodios, contenido derivado, archivos, clases y recursos.
  */
 
-function colRef(companyId: string, name: ContentCollection) {
+function colRef(companyId: string, name: CompanyCollection) {
   return collection(db, "companies", companyId, name);
 }
 
-export async function listContent<T>(companyId: string, name: ContentCollection): Promise<T[]> {
+export async function listContent<T>(companyId: string, name: CompanyCollection): Promise<T[]> {
   const snap = await getDocs(query(colRef(companyId, name), orderBy("order")));
   return snap.docs.map((d) => ({ ...d.data(), id: d.id }) as T);
 }
 
 export async function createContent<T extends object>(
   companyId: string,
-  name: ContentCollection,
+  name: CompanyCollection,
   data: T
 ): Promise<string> {
   const ref = doc(colRef(companyId, name));
@@ -39,13 +43,13 @@ export async function createContent<T extends object>(
 
 export async function updateContent(
   companyId: string,
-  name: ContentCollection,
+  name: CompanyCollection,
   id: string,
   patch: Record<string, unknown>
 ) {
   await updateDoc(doc(colRef(companyId, name), id), patch);
 }
 
-export async function deleteContent(companyId: string, name: ContentCollection, id: string) {
+export async function deleteContent(companyId: string, name: CompanyCollection, id: string) {
   await deleteDoc(doc(colRef(companyId, name), id));
 }

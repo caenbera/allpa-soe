@@ -1,4 +1,5 @@
 import { resolveLucideIcon } from "@/lib/lucide-icon";
+import { Sparkline } from "@/components/page-blocks/blocks/TrendCharts";
 
 export interface KpiItem {
   id: string;
@@ -10,6 +11,8 @@ export interface KpiItem {
   /** Delta con signo; verde si sube, rojo si baja. */
   delta?: string;
   tone?: "gold" | "emerald" | "amber" | "blue" | "violet" | "rose";
+  /** Serie corta que se dibuja bajo la cifra, sin ejes. */
+  trend?: number[];
 }
 
 const TONE_CLASSES: Record<NonNullable<KpiItem["tone"]>, string> = {
@@ -19,6 +22,16 @@ const TONE_CLASSES: Record<NonNullable<KpiItem["tone"]>, string> = {
   blue: "bg-blue-400/12 text-blue-300",
   violet: "bg-violet-400/12 text-violet-300",
   rose: "bg-rose-400/12 text-rose-300",
+};
+
+/** Color de trazo de la miniserie, a juego con el tono de la tarjeta. */
+const TONE_STROKE: Record<NonNullable<KpiItem["tone"]>, string> = {
+  gold: "#e0a836",
+  emerald: "#22c55e",
+  amber: "#f59e0b",
+  blue: "#3b82f6",
+  violet: "#a78bfa",
+  rose: "#f472b6",
 };
 
 export function KpiStrip({ items }: { items: KpiItem[] }) {
@@ -43,6 +56,11 @@ export function KpiStrip({ items }: { items: KpiItem[] }) {
                 )}
                 {item.sub && <span className="truncate text-white/35">{item.sub}</span>}
               </p>
+            )}
+            {item.trend && item.trend.length > 1 && (
+              <div className="mt-2">
+                <Sparkline data={item.trend} color={TONE_STROKE[item.tone ?? "gold"]} />
+              </div>
             )}
           </div>
         );

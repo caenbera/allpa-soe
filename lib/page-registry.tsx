@@ -13,6 +13,9 @@ import { CalendarioMaestroView } from "@/components/pages/contenido/CalendarioMa
 import { TemasEstrategicosView } from "@/components/pages/contenido/TemasEstrategicosView";
 import { AcademiaView } from "@/components/pages/contenido/AcademiaView";
 import { RecursosDescargablesView } from "@/components/pages/contenido/RecursosDescargablesView";
+import { ContactosView } from "@/components/pages/crm/ContactosView";
+import { ContactoPerfilView } from "@/components/pages/crm/ContactoPerfilView";
+import { PipelineView } from "@/components/pages/crm/PipelineView";
 
 /** Mapa ruta → componente para las páginas internas ya construidas. */
 export const pageRegistry: Record<string, ComponentType> = {
@@ -30,6 +33,9 @@ export const pageRegistry: Record<string, ComponentType> = {
   "/contenido/academia": AcademiaView,
   "/contenido/biblioteca-multimedia": BibliotecaMultimediaView,
   "/contenido/recursos-descargables": RecursosDescargablesView,
+
+  "/crm/contactos": ContactosView,
+  "/crm/pipeline": PipelineView,
 };
 
 /**
@@ -40,6 +46,10 @@ const dynamicRoutes: { pattern: RegExp; render: (m: RegExpMatchArray) => React.R
   {
     pattern: /^\/contenido\/calendario-maestro\/semana-(\d{1,2})$/,
     render: (m) => <SemanaDetalleView week={Number(m[1])} />,
+  },
+  {
+    pattern: /^\/crm\/contactos\/([A-Za-z0-9_-]+)$/,
+    render: (m) => <ContactoPerfilView contactId={m[1]} />,
   },
 ];
 
@@ -58,4 +68,9 @@ export function resolvePage(path: string): React.ReactNode | null {
 /** Ruta del detalle de una semana; la usan las tarjetas de calendario. */
 export function weekDetailPath(week: number) {
   return `/contenido/calendario-maestro/semana-${week}`;
+}
+
+/** Ruta del perfil de un contacto; la usan la tabla y el panel lateral. */
+export function contactProfilePath(contactId: string) {
+  return `/crm/contactos/${contactId}`;
 }

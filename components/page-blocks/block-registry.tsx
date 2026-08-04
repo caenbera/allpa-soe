@@ -15,6 +15,14 @@ import { PillarCardGrid, type PillarCardData } from "@/components/page-blocks/bl
 import { EcosystemHub, type EcosystemSpoke } from "@/components/page-blocks/blocks/EcosystemHub";
 import { KpiProgressList, type KpiProgressRow } from "@/components/page-blocks/blocks/KpiProgressList";
 import { UpcomingEpisodes, type UpcomingEpisode } from "@/components/page-blocks/blocks/UpcomingEpisodes";
+import { ScoreRing } from "@/components/page-blocks/blocks/ScoreRing";
+import { TagCloud, type TagChip } from "@/components/page-blocks/blocks/TagCloud";
+import { StatTileList, type StatTile } from "@/components/page-blocks/blocks/StatTileList";
+import { ActivityFeed, type ActivityEntry } from "@/components/page-blocks/blocks/ActivityFeed";
+import { RankedBarList, type RankedBarRow } from "@/components/page-blocks/blocks/RankedBarList";
+import { InsightList, type Insight } from "@/components/page-blocks/blocks/InsightList";
+import { ProfileHeader, type ProfileHeaderData } from "@/components/page-blocks/blocks/ProfileHeader";
+import { LineChart, ColumnChart, type TrendSeries } from "@/components/page-blocks/blocks/TrendCharts";
 import type { BlockInstance, BlockType } from "@/lib/block-types";
 
 export interface BlockRegistryEntry {
@@ -99,6 +107,67 @@ export const blockRegistry: Partial<Record<BlockType, BlockRegistryEntry>> = {
     render: (block) => {
       const steps = (block.config as TimelineStep[]) ?? [];
       return steps.length ? <Timeline steps={steps} /> : EMPTY_HINT;
+    },
+  },
+  "score-ring": {
+    render: (block) => {
+      const cfg = block.config as { value: number } | null;
+      return cfg ? (
+        <div className="flex justify-center py-2">
+          <ScoreRing value={cfg.value} size={72} />
+        </div>
+      ) : (
+        EMPTY_HINT
+      );
+    },
+  },
+  "tag-cloud": {
+    render: (block) => <TagCloud tags={(block.config as TagChip[]) ?? []} />,
+  },
+  "stat-tiles": {
+    render: (block) => {
+      const tiles = (block.config as StatTile[]) ?? [];
+      return tiles.length ? <StatTileList tiles={tiles} /> : EMPTY_HINT;
+    },
+  },
+  "activity-feed": {
+    render: (block) => {
+      const entries = (block.config as ActivityEntry[]) ?? [];
+      return entries.length ? <ActivityFeed entries={entries} /> : EMPTY_HINT;
+    },
+  },
+  "ranked-bars": {
+    render: (block) => {
+      const rows = (block.config as RankedBarRow[]) ?? [];
+      return rows.length ? <RankedBarList rows={rows} /> : EMPTY_HINT;
+    },
+  },
+  "insight-list": {
+    render: (block) => {
+      const insights = (block.config as Insight[]) ?? [];
+      return insights.length ? <InsightList insights={insights} /> : EMPTY_HINT;
+    },
+  },
+  "profile-header": {
+    render: (block) => {
+      const cfg = block.config as ProfileHeaderData | null;
+      return cfg ? <ProfileHeader data={cfg} /> : EMPTY_HINT;
+    },
+  },
+  "line-chart": {
+    render: (block) => {
+      const cfg = block.config as { data: Record<string, unknown>[]; categoryKey: string; series: TrendSeries[] } | null;
+      return cfg?.data?.length ? <LineChart data={cfg.data} categoryKey={cfg.categoryKey} series={cfg.series} /> : EMPTY_HINT;
+    },
+  },
+  "column-chart": {
+    render: (block) => {
+      const cfg = block.config as { data: Record<string, unknown>[]; categoryKey: string; valueKey: string; color?: string } | null;
+      return cfg?.data?.length ? (
+        <ColumnChart data={cfg.data} categoryKey={cfg.categoryKey} valueKey={cfg.valueKey} color={cfg.color} />
+      ) : (
+        EMPTY_HINT
+      );
     },
   },
   "week-cards": {

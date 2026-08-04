@@ -2,6 +2,7 @@ import { collection, doc, getDoc, getDocs, updateDoc, writeBatch } from "firebas
 import { db } from "@/lib/firebase";
 import { CONTENT_COLLECTIONS } from "@/lib/content-types";
 import type { Episode, Pillar } from "@/lib/content-types";
+import { CRM_COLLECTIONS } from "@/lib/crm-types";
 
 /**
  * Versión actual del contenido de demostración. Al subirla, las empresas ya
@@ -9,8 +10,9 @@ import type { Episode, Pillar } from "@/lib/content-types";
  *
  * 1 → siembra inicial (12 semanas).
  * 2 → plan anual completo (52 semanas) y temas por pilar.
+ * 3 → módulo CRM: contactos, oportunidades, actividades y catálogos.
  */
-const DEMO_SEED_VERSION = 2;
+const DEMO_SEED_VERSION = 3;
 
 /**
  * Siembra el contenido de demostración en la empresa del super administrador,
@@ -32,12 +34,38 @@ export async function seedDemoContent(companyId: string): Promise<boolean> {
 
   if (currentVersion === 0) {
     await seedFromScratch(companyId);
-  } else {
+  } else if (currentVersion < 3) {
     await topUpToLatest(companyId);
   }
 
+  // El CRM llegó en la versión 3: se siembra si la empresa aún no lo tiene,
+  // tanto en la siembra inicial como en el complemento.
+  if (currentVersion < 3) await seedCrm(companyId);
+
   await updateDoc(companyRef, { demoSeedVersion: DEMO_SEED_VERSION, demoSeeded: true });
   return true;
+}
+
+/** Siembra el CRM solo si sus colecciones están vacías, para no duplicar. */
+async function seedCrm(companyId: string) {
+  const existing = await getDocs(collection(db, "companies", companyId, CRM_COLLECTIONS.contacts));
+  if (!existing.empty) return;
+
+  const demo = await import("@/lib/demo-crm");
+  const batch = writeBatch(db);
+
+  const write = (name: string, rows: object[]) => {
+    rows.forEach((row) => batch.set(doc(collection(db, "companies", companyId, name)), row));
+  };
+
+  write(CRM_COLLECTIONS.contacts, demo.DEMO_CONTACTS);
+  write(CRM_COLLECTIONS.deals, demo.DEMO_DEALS);
+  write(CRM_COLLECTIONS.activities, demo.DEMO_ACTIVITIES);
+  write(CRM_COLLECTIONS.tags, demo.DEMO_TAGS);
+  write(CRM_COLLECTIONS.segments, demo.DEMO_SEGMENTS);
+  write(CRM_COLLECTIONS.automations, demo.DEMO_AUTOMATIONS);
+
+  await batch.commit();
 }
 
 async function seedFromScratch(companyId: string) {

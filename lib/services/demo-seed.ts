@@ -13,8 +13,9 @@ import { CRM_COLLECTIONS } from "@/lib/crm-types";
  * 3 → módulo CRM: contactos, oportunidades, actividades y catálogos.
  * 4 → módulo CRM: empresas y familias.
  * 5 → módulo CRM: nodos y aristas del grafo de relaciones.
+ * 6 → módulo CRM: más actividades, para que cada pestaña tenga contenido.
  */
-const DEMO_SEED_VERSION = 5;
+const DEMO_SEED_VERSION = 6;
 
 /**
  * Siembra el contenido de demostración en la empresa del super administrador,
@@ -51,8 +52,34 @@ export async function seedDemoContent(companyId: string): Promise<boolean> {
   // El grafo de relaciones llegó en la versión 5.
   if (currentVersion < 5) await seedCrmGraph(companyId);
 
+  // La versión 6 solo añade actividades a quien ya tenía la tanda corta.
+  if (currentVersion < 6) await topUpCrmActivities(companyId);
+
   await updateDoc(companyRef, { demoSeedVersion: DEMO_SEED_VERSION, demoSeeded: true });
   return true;
+}
+
+/**
+ * Complemento de la versión 6: escribe solo las actividades que falten,
+ * identificadas por su `order`, así que no duplica las que ya estén ni
+ * repone las que el superadministrador haya borrado a propósito… salvo que
+ * coincida el hueco, que es el precio de no guardar un identificador propio.
+ */
+async function topUpCrmActivities(companyId: string) {
+  const ref = collection(db, "companies", companyId, CRM_COLLECTIONS.activities);
+  const snap = await getDocs(ref);
+  // Vacío significa que `seedCrm` acaba de escribir la tanda completa o que
+  // esta empresa no tiene CRM: en ninguno de los dos casos hay que complementar.
+  if (snap.empty) return;
+
+  const existing = new Set(snap.docs.map((d) => (d.data() as { order?: number }).order));
+  const demo = await import("@/lib/demo-crm");
+  const missing = demo.DEMO_ACTIVITIES.filter((a) => !existing.has(a.order));
+  if (missing.length === 0) return;
+
+  const batch = writeBatch(db);
+  missing.forEach((row) => batch.set(doc(ref), row));
+  await batch.commit();
 }
 
 /** Siembra el CRM solo si sus colecciones están vacías, para no duplicar. */

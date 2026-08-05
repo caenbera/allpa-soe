@@ -19,6 +19,10 @@ import { PipelineView } from "@/components/pages/crm/PipelineView";
 import { EmpresasView } from "@/components/pages/crm/EmpresasView";
 import { FamiliasView } from "@/components/pages/crm/FamiliasView";
 import { RelacionesView } from "@/components/pages/crm/RelacionesView";
+import { ActividadView } from "@/components/pages/crm/ActividadView";
+import { EtiquetasView } from "@/components/pages/crm/EtiquetasView";
+import { SegmentosView } from "@/components/pages/crm/SegmentosView";
+import { AutomatizacionesView } from "@/components/pages/crm/AutomatizacionesView";
 
 /** Mapa ruta → componente para las páginas internas ya construidas. */
 export const pageRegistry: Record<string, ComponentType> = {
@@ -42,6 +46,10 @@ export const pageRegistry: Record<string, ComponentType> = {
   "/crm/familias": FamiliasView,
   "/crm/relaciones": RelacionesView,
   "/crm/pipeline": PipelineView,
+  "/crm/actividad": ActividadView,
+  "/crm/etiquetas": EtiquetasView,
+  "/crm/segmentos": SegmentosView,
+  "/crm/automatizaciones": AutomatizacionesView,
 };
 
 /**

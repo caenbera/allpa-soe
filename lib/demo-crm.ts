@@ -176,6 +176,23 @@ const ACTIVITY_SEEDS: ActivitySeed[] = [
   ["Nota", "Isabella Muñoz", "Estate Planning", "Etiqueta aplicada", "Interesado en Trust", "Diana Bermeo", "Diana Bermeo", "12 may, 01:08 PM"],
   ["Llamada", "Valentina Rojas", "Trusts", "Llamada realizada", "Duración: 8m 12s", "María López", "María López", "11 may, 05:40 PM"],
   ["Email", "Fernando Ruiz", "Life Insurance", "Email enviado", "Asunto: Tu consulta patrimonial", "Secuencia Bienvenida", "Andrés Vargas", "11 may, 02:15 PM"],
+  // Complemento de la versión 6: reparto más parejo entre los seis tipos, para
+  // que ninguna pestaña de Actividad se quede con una sola fila.
+  ["Llamada", "Sofía Herrera", "Life Insurance", "Llamada realizada", "Duración: 15m 03s", "Andrés Vargas", "Andrés Vargas", "11 may, 10:05 AM"],
+  ["Llamada", "Diego Fernández", "Trusts", "Llamada no contestada", "Sin respuesta, segundo intento", "Camila Torres", "Camila Torres", "10 may, 04:50 PM"],
+  ["Llamada", "Roberto Díaz", "Business Planning", "Llamada realizada", "Duración: 21m 40s", "María López", "María López", "10 may, 11:20 AM"],
+  ["Email", "Patricia Gómez", "Estate Planning", "Email abierto", "Asunto: Tu cita del 28 de mayo", "Secuencia Cita", "Sistema", "10 may, 09:12 AM"],
+  ["Email", "Ricardo Méndez", "Negocios", "Email enviado", "Asunto: Caso de éxito — protección de socios", "Boletín mensual", "Diana Bermeo", "09 may, 06:35 PM"],
+  ["Reunión", "Ana Beatriz López", "Estate Planning", "Reunión realizada", "Revisión anual del plan patrimonial", "Oficina Brickell", "María López", "09 may, 03:00 PM"],
+  ["Reunión", "Carlos González", "Trusts", "Reunión agendada", "Revisión de estructura societaria", "Calendly", "Andrés Vargas", "09 may, 10:45 AM"],
+  ["Reunión", "Diego Fernández", "Trusts", "Reunión reprogramada", "Movida al 2 de junio a petición del cliente", "Calendly", "Camila Torres", "08 may, 05:25 PM"],
+  ["Tarea", "Fernando Ruiz", "Life Insurance", "Tarea creada", "Preparar comparativa de coberturas", "Andrés Vargas", "Andrés Vargas", "08 may, 02:10 PM"],
+  ["Tarea", "Patricia Gómez", "Estate Planning", "Tarea completada", "Enviar documentación previa a la cita", "María López", "María López", "08 may, 09:30 AM"],
+  ["Tarea", "Valentina Rojas", "Trusts", "Tarea vencida", "Confirmar asistencia al seminario", "Camila Torres", "Camila Torres", "07 may, 07:00 PM"],
+  ["Nota", "Roberto Díaz", "Business Planning", "Nota agregada", "Quiere revisar el acuerdo con su socio antes de julio.", "Diana Bermeo", "Diana Bermeo", "07 may, 04:15 PM"],
+  ["Nota", "Sofía Herrera", "Life Insurance", "Nota agregada", "Prefiere que la contactemos por WhatsApp.", "Andrés Vargas", "Andrés Vargas", "07 may, 12:40 PM"],
+  ["Cambio", "Laura Martínez", "Estate Planning", "Etapa actualizada", "De Contactados a Descubrimiento", "Pipeline", "Sistema", "06 may, 05:55 PM"],
+  ["Cambio", "María Gabriela Ruiz", "Life Insurance", "Asesor reasignado", "De Camila Torres a María López", "Automatización", "Sistema", "06 may, 11:10 AM"],
 ];
 
 export const DEMO_ACTIVITIES: Omit<Activity, "id">[] = ACTIVITY_SEEDS.map(

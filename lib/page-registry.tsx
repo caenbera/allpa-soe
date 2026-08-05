@@ -23,6 +23,7 @@ import { ActividadView } from "@/components/pages/crm/ActividadView";
 import { EtiquetasView } from "@/components/pages/crm/EtiquetasView";
 import { SegmentosView } from "@/components/pages/crm/SegmentosView";
 import { AutomatizacionesView } from "@/components/pages/crm/AutomatizacionesView";
+import { AnaliticaCrmView } from "@/components/pages/crm/AnaliticaCrmView";
 
 /** Mapa ruta → componente para las páginas internas ya construidas. */
 export const pageRegistry: Record<string, ComponentType> = {
@@ -50,6 +51,7 @@ export const pageRegistry: Record<string, ComponentType> = {
   "/crm/etiquetas": EtiquetasView,
   "/crm/segmentos": SegmentosView,
   "/crm/automatizaciones": AutomatizacionesView,
+  "/crm/analitica-crm": AnaliticaCrmView,
 };
 
 /**

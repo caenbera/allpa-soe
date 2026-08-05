@@ -117,7 +117,7 @@ export const defaultSidebarBlocks: DefaultBlockConfig[] = [
       { slug: "etiquetas", name: "Etiquetas", icon: "Tags", built: true },
       { slug: "segmentos", name: "Segmentos", icon: "Filter", built: true },
       { slug: "automatizaciones", name: "Automatizaciones", icon: "Zap", built: true },
-      { slug: "analitica-crm", name: "Analítica CRM", icon: "LineChart", built: false },
+      { slug: "analitica-crm", name: "Analítica CRM", icon: "LineChart", built: true },
     ],
   },
   { slug: "ventas", name: "Ventas", icon: "ShoppingCart", pages: [] },

@@ -14,6 +14,7 @@ export const CRM_COLLECTIONS = {
   contacts: "crmContacts",
   accounts: "crmAccounts",
   families: "crmFamilies",
+  nodes: "crmNodes",
   relationships: "crmRelationships",
   deals: "crmDeals",
   activities: "crmActivities",
@@ -160,18 +161,60 @@ export const RELATIONSHIP_NODE_COLOR: Record<RelationshipNodeType, string> = {
   asesor: "#f59e0b",
 };
 
+/**
+ * Un nodo del grafo: persona, empresa, trust, producto o profesional.
+ *
+ * Es una colección aparte de `crmContacts` y `crmAccounts` a propósito: en el
+ * grafo aparecen entidades que no son contactos ni cuentas propias (el hijo de
+ * un cliente, una subsidiaria, el contador externo). Las tres vistas —grafo,
+ * árbol familiar y organigrama— se dibujan con estos nodos más las aristas.
+ */
+export interface CrmNode {
+  id: string;
+  /** Identificador estable al que apuntan las aristas, ej. "carlos-gonzalez". */
+  key: string;
+  type: RelationshipNodeType;
+  label: string;
+  /** Línea bajo el nombre: "Esposa", "Empresa", "Trust", "Contadora"… */
+  sublabel: string;
+  /** Etiqueta destacada dentro del nodo: "Cliente", "Patriarca", "Beneficiario". */
+  badge: string;
+  /** Nodo central del grafo y raíz del organigrama. */
+  root: boolean;
+  /** Valor monetario asociado: empresas, trusts y productos. */
+  value: number | null;
+  // Árbol familiar
+  birthYear: number | null;
+  deathYear: number | null;
+  /** 1 = abuelos, 2 = padres, 3 = hijos, 4 = nietos. */
+  generation: number | null;
+  // Ficha lateral
+  email: string;
+  phone: string;
+  location: string;
+  // Organigrama
+  industry: string;
+  legalType: string;
+  employees: number | null;
+  order: number;
+}
+
+/** Agrupa las aristas por la pestaña que las consume. */
+export type RelationshipCategory = "familia" | "empresa" | "producto" | "profesional" | "patrimonio";
+
 export interface CrmRelationship {
   id: string;
-  fromType: RelationshipNodeType;
-  fromId: string;
-  fromLabel: string;
-  toType: RelationshipNodeType;
-  toId: string;
-  toLabel: string;
+  /** `key` del nodo de origen. */
+  fromKey: string;
+  /** `key` del nodo de destino. */
+  toKey: string;
   /** Parentesco o vínculo: "Esposa", "Hijo", "Subsidiaria", "Beneficiario"… */
   kind: string;
+  category: RelationshipCategory;
   /** Porcentaje de participación, cuando aplica (organigrama). */
   ownership: number | null;
+  /** Vínculo indirecto: se dibuja punteado en el grafo. */
+  indirect: boolean;
   order: number;
 }
 

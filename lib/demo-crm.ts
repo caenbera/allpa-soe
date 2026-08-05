@@ -14,6 +14,8 @@ import type {
   CrmAccount,
   CrmAutomation,
   CrmFamily,
+  CrmNode,
+  CrmRelationship,
   CrmSegment,
   CrmTag,
   Deal,
@@ -286,6 +288,174 @@ export const DEMO_FAMILIES: Omit<CrmFamily, "id">[] = FAMILY_SEEDS.map(
     order: i,
   })
 );
+
+// ── Grafo de relaciones ────────────────────────────────────────────────────
+
+/**
+ * Nodos y aristas de la familia González, que es el caso completo de
+ * demostración: cuatro generaciones, un grupo empresarial de tres niveles,
+ * un trust, sus productos contratados y los profesionales externos.
+ *
+ * Las tres vistas de Relaciones —grafo, árbol familiar y organigrama— se
+ * dibujan con estos mismos dos conjuntos, sin duplicar información.
+ */
+
+type NodeInput = Partial<Omit<CrmNode, "id" | "order">> &
+  Pick<CrmNode, "key" | "type" | "label">;
+
+let nodeOrder = 0;
+
+/** Rellena los campos que no aplican a cada tipo de nodo; Firestore no admite `undefined`. */
+const node = (input: NodeInput): Omit<CrmNode, "id"> => ({
+  sublabel: "",
+  badge: "",
+  root: false,
+  value: null,
+  birthYear: null,
+  deathYear: null,
+  generation: null,
+  email: "",
+  phone: "",
+  location: "",
+  industry: "",
+  legalType: "",
+  employees: null,
+  ...input,
+  order: nodeOrder++,
+});
+
+export const DEMO_NODES: Omit<CrmNode, "id">[] = [
+  // Generación 1 — abuelos
+  node({ key: "roberto-gonzalez", type: "persona", label: "Roberto González", sublabel: "Padre", badge: "Patriarca", birthYear: 1945, deathYear: 2018, generation: 1, location: "Miami, FL" }),
+  node({ key: "maria-gonzalez", type: "persona", label: "María de González", sublabel: "Madre", badge: "Matriarca", birthYear: 1948, deathYear: 2020, generation: 1, location: "Miami, FL" }),
+
+  // Generación 2 — el cliente y su cónyuge
+  node({
+    key: "carlos-gonzalez",
+    type: "persona",
+    label: "Carlos González",
+    sublabel: "Cliente principal",
+    badge: "Cliente",
+    root: true,
+    birthYear: 1972,
+    generation: 2,
+    email: "carlos.gonzalez@email.com",
+    phone: "(305) 555-2345",
+    location: "Miami, FL",
+  }),
+  node({ key: "laura-gonzalez", type: "persona", label: "Laura González", sublabel: "Esposa", badge: "Cónyuge", birthYear: 1975, generation: 2, email: "laura.gonzalez@email.com", phone: "(305) 555-2346", location: "Miami, FL" }),
+
+  // Generación 3 — hijos
+  node({ key: "diego-gonzalez", type: "persona", label: "Diego González", sublabel: "Hijo", badge: "Beneficiario", birthYear: 1998, generation: 3, location: "Miami, FL" }),
+  node({ key: "valentina-gonzalez", type: "persona", label: "Valentina González", sublabel: "Hija", badge: "Beneficiaria", birthYear: 2001, generation: 3, location: "Miami, FL" }),
+  node({ key: "andres-gonzalez", type: "persona", label: "Andrés González", sublabel: "Hijo", badge: "Beneficiario", birthYear: 2004, generation: 3, location: "Miami, FL" }),
+
+  // Generación 4 — nietos
+  node({ key: "sofia-gonzalez", type: "persona", label: "Sofía González", sublabel: "Nieta", badge: "Beneficiaria", birthYear: 2022, generation: 4, location: "Miami, FL" }),
+  node({ key: "mateo-gonzalez", type: "persona", label: "Mateo González", sublabel: "Nieto", badge: "Beneficiario", birthYear: 2024, generation: 4, location: "Miami, FL" }),
+
+  // Grupo empresarial — nivel 1
+  node({ key: "gonzalez-holdings", type: "empresa", label: "González Holdings LLC", sublabel: "Holding Company", badge: "Empresa activa", root: true, value: 520_400_000, industry: "Holding Company", legalType: "LLC", employees: 12, location: "Delaware, USA" }),
+
+  // Nivel 2
+  node({ key: "gonzalez-construction", type: "empresa", label: "González Construction LLC", sublabel: "Construcción", badge: "Empresa activa", value: 180_200_000, industry: "Construcción", legalType: "LLC", employees: 312, location: "Miami, FL" }),
+  node({ key: "gonzalez-properties", type: "empresa", label: "González Properties LLC", sublabel: "Bienes Raíces", badge: "Empresa activa", value: 220_500_000, industry: "Bienes Raíces", legalType: "LLC", employees: 24, location: "Miami, FL" }),
+  node({ key: "gonzalez-investments", type: "empresa", label: "González Investments LLC", sublabel: "Inversiones", badge: "Empresa activa", value: 95_700_000, industry: "Inversiones", legalType: "LLC", employees: 8, location: "Miami, FL" }),
+  node({ key: "gonzalez-services", type: "empresa", label: "González Services LLC", sublabel: "Servicios", badge: "Empresa activa", value: 24_800_000, industry: "Servicios", legalType: "LLC", employees: 56, location: "Miami, FL" }),
+  node({ key: "gc-development", type: "empresa", label: "GC Development Inc.", sublabel: "Desarrollo", badge: "Empresa activa", value: 45_600_000, industry: "Desarrollo", legalType: "Inc.", employees: 18, location: "Miami, FL" }),
+
+  // Nivel 3
+  node({ key: "gc-engineering", type: "empresa", label: "GC Engineering Inc.", sublabel: "Ingeniería", badge: "Empresa activa", value: 28_300_000, industry: "Ingeniería", legalType: "Inc.", employees: 64, location: "Miami, FL" }),
+  node({ key: "gc-build", type: "empresa", label: "GC Build Corp.", sublabel: "Contratista", badge: "Empresa activa", value: 32_100_000, industry: "Construcción", legalType: "Corp.", employees: 148, location: "Miami, FL" }),
+  node({ key: "miami-beach-portfolio", type: "empresa", label: "Miami Beach Portfolio LLC", sublabel: "Propiedad", badge: "Empresa activa", value: 120_400_000, industry: "Bienes Raíces", legalType: "LLC", employees: 6, location: "Miami Beach, FL" }),
+  node({ key: "g-investments-mgmt", type: "empresa", label: "G Investments Management LLC", sublabel: "Gestión", badge: "Empresa activa", value: 12_300_000, industry: "Inversiones", legalType: "LLC", employees: 4, location: "Miami, FL" }),
+  node({ key: "gc-facility", type: "empresa", label: "GC Facility Services Inc.", sublabel: "Servicios", badge: "Empresa activa", value: 12_200_000, industry: "Servicios", legalType: "Inc.", employees: 38, location: "Doral, FL" }),
+  node({ key: "gc-land", type: "empresa", label: "GC Land Holdings LLC", sublabel: "Terrenos", badge: "Empresa activa", value: 18_700_000, industry: "Desarrollo", legalType: "LLC", employees: 3, location: "Homestead, FL" }),
+
+  // Trust
+  node({ key: "gonzalez-family-trust", type: "trust", label: "González Family Trust", sublabel: "Trust", badge: "Beneficiario final", value: 4_800_000, legalType: "Irrevocable Trust", location: "Delaware, USA" }),
+
+  // Productos contratados
+  node({ key: "life-insurance", type: "producto", label: "Life Insurance", sublabel: "Seguro", value: 2_500_000 }),
+  node({ key: "retirement-plan", type: "producto", label: "Retirement Plan", sublabel: "Producto", value: 1_200_000 }),
+  node({ key: "buy-sell-agreement", type: "producto", label: "Buy-Sell Agreement", sublabel: "Producto", value: 35_000_000 }),
+  node({ key: "key-person-insurance", type: "producto", label: "Key Person Insurance", sublabel: "Seguro", value: 5_000_000 }),
+
+  // Profesionales externos
+  node({ key: "sonia-munoz", type: "asesor", label: "Sonia Muñoz, CPA", sublabel: "Contadora", email: "sonia.munoz@cpafirm.com", phone: "(305) 555-7711", location: "Miami, FL" }),
+  node({ key: "michael-davis", type: "asesor", label: "Michael Davis, Esq.", sublabel: "Attorney", email: "mdavis@davislaw.com", phone: "(305) 555-7712", location: "Miami, FL" }),
+  node({ key: "james-carter", type: "asesor", label: "James Carter", sublabel: "Wealth Advisor", email: "jcarter@wealth.com", phone: "(305) 555-7713", location: "Coral Gables, FL" }),
+];
+
+let relOrder = 0;
+
+const rel = (
+  fromKey: string,
+  toKey: string,
+  kind: string,
+  category: CrmRelationship["category"],
+  extra: { ownership?: number; indirect?: boolean } = {}
+): Omit<CrmRelationship, "id"> => ({
+  fromKey,
+  toKey,
+  kind,
+  category,
+  ownership: extra.ownership ?? null,
+  indirect: extra.indirect ?? false,
+  order: relOrder++,
+});
+
+export const DEMO_RELATIONSHIPS: Omit<CrmRelationship, "id">[] = [
+  // Familia: siempre de progenitor o titular hacia el vínculo.
+  rel("roberto-gonzalez", "maria-gonzalez", "Cónyuge", "familia"),
+  rel("roberto-gonzalez", "carlos-gonzalez", "Hijo", "familia"),
+  rel("carlos-gonzalez", "laura-gonzalez", "Esposa", "familia"),
+  rel("carlos-gonzalez", "diego-gonzalez", "Hijo", "familia"),
+  rel("carlos-gonzalez", "valentina-gonzalez", "Hija", "familia"),
+  rel("carlos-gonzalez", "andres-gonzalez", "Hijo", "familia"),
+  rel("diego-gonzalez", "sofia-gonzalez", "Hija", "familia"),
+  rel("diego-gonzalez", "mateo-gonzalez", "Hijo", "familia"),
+
+  // Propiedad del grupo empresarial: suma 100 %.
+  rel("carlos-gonzalez", "gonzalez-holdings", "Propietario", "empresa", { ownership: 60 }),
+  rel("laura-gonzalez", "gonzalez-holdings", "Propietaria", "empresa", { ownership: 20 }),
+  rel("andres-gonzalez", "gonzalez-holdings", "Propietario", "empresa", { ownership: 10 }),
+  rel("valentina-gonzalez", "gonzalez-holdings", "Propietaria", "empresa", { ownership: 10 }),
+  rel("carlos-gonzalez", "gonzalez-construction", "Director", "empresa"),
+
+  // Estructura societaria: estas aristas son las que dibujan el organigrama.
+  rel("gonzalez-holdings", "gonzalez-construction", "Subsidiaria directa", "empresa", { ownership: 100 }),
+  rel("gonzalez-holdings", "gonzalez-properties", "Subsidiaria directa", "empresa", { ownership: 100 }),
+  rel("gonzalez-holdings", "gonzalez-investments", "Subsidiaria directa", "empresa", { ownership: 100 }),
+  rel("gonzalez-holdings", "gonzalez-services", "Subsidiaria directa", "empresa", { ownership: 100 }),
+  rel("gonzalez-holdings", "gc-development", "Subsidiaria directa", "empresa", { ownership: 100 }),
+  rel("gonzalez-construction", "gc-engineering", "Subsidiaria", "empresa", { ownership: 75 }),
+  rel("gonzalez-construction", "gc-build", "Subsidiaria", "empresa", { ownership: 100 }),
+  rel("gonzalez-properties", "miami-beach-portfolio", "Subsidiaria", "empresa", { ownership: 100 }),
+  rel("gonzalez-investments", "g-investments-mgmt", "Subsidiaria", "empresa", { ownership: 100 }),
+  rel("gonzalez-services", "gc-facility", "Subsidiaria", "empresa", { ownership: 100 }),
+  rel("gc-development", "gc-land", "Subsidiaria", "empresa", { ownership: 100 }),
+  rel("miami-beach-portfolio", "gonzalez-family-trust", "Beneficiario final", "empresa"),
+
+  // Patrimonio y productos contratados.
+  rel("carlos-gonzalez", "gonzalez-family-trust", "Beneficiario", "patrimonio"),
+  rel("carlos-gonzalez", "life-insurance", "Titular", "producto"),
+  rel("carlos-gonzalez", "retirement-plan", "Titular", "producto"),
+  rel("carlos-gonzalez", "buy-sell-agreement", "Titular", "producto"),
+  rel("gonzalez-construction", "key-person-insurance", "Contratante", "producto"),
+
+  // Profesionales que asesoran a la familia.
+  rel("carlos-gonzalez", "sonia-munoz", "Contadora", "profesional"),
+  rel("carlos-gonzalez", "michael-davis", "Abogado", "profesional"),
+  rel("carlos-gonzalez", "james-carter", "Asesor patrimonial", "profesional"),
+
+  // Vínculos indirectos: se dibujan punteados en el grafo.
+  rel("laura-gonzalez", "gonzalez-family-trust", "Beneficiaria", "patrimonio", { indirect: true }),
+  rel("diego-gonzalez", "gonzalez-construction", "Empleado", "empresa", { indirect: true }),
+  rel("sonia-munoz", "gonzalez-holdings", "Contabilidad", "profesional", { indirect: true }),
+  rel("michael-davis", "gonzalez-family-trust", "Asesoría legal", "profesional", { indirect: true }),
+  rel("james-carter", "retirement-plan", "Gestión", "profesional", { indirect: true }),
+];
 
 // ── Catálogos ──────────────────────────────────────────────────────────────
 

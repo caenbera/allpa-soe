@@ -123,6 +123,10 @@ service cloud.firestore {
         allow read: if canReadCompanyData(companyId);
         allow write: if isCompanyMember(companyId);
       }
+      match /crmNodes/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
       match /crmRelationships/{docId} {
         allow read: if canReadCompanyData(companyId);
         allow write: if isCompanyMember(companyId);

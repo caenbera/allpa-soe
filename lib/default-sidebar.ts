@@ -111,7 +111,7 @@ export const defaultSidebarBlocks: DefaultBlockConfig[] = [
       { slug: "contactos", name: "Contactos", icon: "UserRound", built: true },
       { slug: "empresas", name: "Empresas", icon: "Building2", built: true },
       { slug: "familias", name: "Familias", icon: "Users2", built: true },
-      { slug: "relaciones", name: "Relaciones", icon: "Workflow", built: false },
+      { slug: "relaciones", name: "Relaciones", icon: "Workflow", built: true },
       { slug: "pipeline", name: "Pipeline", icon: "BarChart3", built: true },
       { slug: "actividad", name: "Actividad", icon: "History", built: false },
       { slug: "etiquetas", name: "Etiquetas", icon: "Tags", built: false },

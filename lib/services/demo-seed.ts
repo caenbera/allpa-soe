@@ -12,8 +12,9 @@ import { CRM_COLLECTIONS } from "@/lib/crm-types";
  * 2 → plan anual completo (52 semanas) y temas por pilar.
  * 3 → módulo CRM: contactos, oportunidades, actividades y catálogos.
  * 4 → módulo CRM: empresas y familias.
+ * 5 → módulo CRM: nodos y aristas del grafo de relaciones.
  */
-const DEMO_SEED_VERSION = 4;
+const DEMO_SEED_VERSION = 5;
 
 /**
  * Siembra el contenido de demostración en la empresa del super administrador,
@@ -46,6 +47,9 @@ export async function seedDemoContent(companyId: string): Promise<boolean> {
   // Empresas y familias llegaron en la versión 4, aparte de las colecciones
   // de la 3: una empresa que ya tenía CRM las recibe como complemento.
   if (currentVersion < 4) await seedCrmAccountsFamilies(companyId);
+
+  // El grafo de relaciones llegó en la versión 5.
+  if (currentVersion < 5) await seedCrmGraph(companyId);
 
   await updateDoc(companyRef, { demoSeedVersion: DEMO_SEED_VERSION, demoSeeded: true });
   return true;
@@ -83,6 +87,20 @@ async function seedCrmAccountsFamilies(companyId: string) {
 
   demo.DEMO_ACCOUNTS.forEach((row) => batch.set(doc(collection(db, "companies", companyId, CRM_COLLECTIONS.accounts)), row));
   demo.DEMO_FAMILIES.forEach((row) => batch.set(doc(collection(db, "companies", companyId, CRM_COLLECTIONS.families)), row));
+
+  await batch.commit();
+}
+
+/** Complemento de la versión 5: nodos y aristas del grafo, solo si faltan. */
+async function seedCrmGraph(companyId: string) {
+  const existing = await getDocs(collection(db, "companies", companyId, CRM_COLLECTIONS.nodes));
+  if (!existing.empty) return;
+
+  const demo = await import("@/lib/demo-crm");
+  const batch = writeBatch(db);
+
+  demo.DEMO_NODES.forEach((row) => batch.set(doc(collection(db, "companies", companyId, CRM_COLLECTIONS.nodes)), row));
+  demo.DEMO_RELATIONSHIPS.forEach((row) => batch.set(doc(collection(db, "companies", companyId, CRM_COLLECTIONS.relationships)), row));
 
   await batch.commit();
 }

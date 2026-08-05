@@ -47,7 +47,8 @@ export type BlockType =
   | "column-chart"
   | "kanban-board"
   | "relationship-graph"
-  | "org-chart";
+  | "org-chart"
+  | "family-tree";
 
 export interface BlockInstance<TConfig = unknown> {
   id: string;
@@ -107,6 +108,7 @@ export const BLOCK_TYPE_CATALOG: BlockTypeDef[] = [
   { type: "kanban-board", label: "Tablero por etapas", description: "Tarjetas arrastrables entre columnas.", icon: "Columns3" },
   { type: "relationship-graph", label: "Grafo de relaciones", description: "Personas, empresas y productos conectados.", icon: "Workflow" },
   { type: "org-chart", label: "Organigrama", description: "Estructura jerárquica con participación.", icon: "Network" },
+  { type: "family-tree", label: "Árbol familiar", description: "Miembros de la familia por generación.", icon: "Users2" },
 ];
 
 export function getBlockTypeDef(type: BlockType): BlockTypeDef | undefined {

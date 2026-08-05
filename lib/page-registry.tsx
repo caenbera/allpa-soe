@@ -18,6 +18,7 @@ import { ContactoPerfilView } from "@/components/pages/crm/ContactoPerfilView";
 import { PipelineView } from "@/components/pages/crm/PipelineView";
 import { EmpresasView } from "@/components/pages/crm/EmpresasView";
 import { FamiliasView } from "@/components/pages/crm/FamiliasView";
+import { RelacionesView } from "@/components/pages/crm/RelacionesView";
 
 /** Mapa ruta → componente para las páginas internas ya construidas. */
 export const pageRegistry: Record<string, ComponentType> = {
@@ -39,6 +40,7 @@ export const pageRegistry: Record<string, ComponentType> = {
   "/crm/contactos": ContactosView,
   "/crm/empresas": EmpresasView,
   "/crm/familias": FamiliasView,
+  "/crm/relaciones": RelacionesView,
   "/crm/pipeline": PipelineView,
 };
 

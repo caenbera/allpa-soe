@@ -1,3 +1,9 @@
+"use client";
+
+// Los bloques son todos interactivos y, además, los tres de grafo se cargan con
+// `next/dynamic` + `ssr: false`, que solo es válido en un módulo de cliente.
+
+import dynamic from "next/dynamic";
 import { RichTextEditor } from "@/components/page-blocks/RichTextEditor";
 import { KpiStrip, type KpiItem } from "@/components/page-blocks/blocks/KpiStrip";
 import { DonutChart, type DonutSlice } from "@/components/page-blocks/blocks/DonutChart";
@@ -23,7 +29,23 @@ import { RankedBarList, type RankedBarRow } from "@/components/page-blocks/block
 import { InsightList, type Insight } from "@/components/page-blocks/blocks/InsightList";
 import { ProfileHeader, type ProfileHeaderData } from "@/components/page-blocks/blocks/ProfileHeader";
 import { LineChart, ColumnChart, type TrendSeries } from "@/components/page-blocks/blocks/TrendCharts";
+import type { GraphLink, GraphNode } from "@/components/page-blocks/blocks/RelationshipGraph";
+import type { OrgEdge, OrgNode } from "@/components/page-blocks/blocks/OrgChart";
+import type { FamilyEdge, FamilyMember } from "@/components/page-blocks/blocks/FamilyTree";
 import type { BlockInstance, BlockType } from "@/lib/block-types";
+
+// Los bloques de grafo arrastran d3-force y dagre; se cargan solo cuando una
+// página los pinta de verdad, no por el hecho de importar el registro.
+const LazyRelationshipGraph = dynamic(
+  () => import("@/components/page-blocks/blocks/RelationshipGraph").then((m) => m.RelationshipGraph),
+  { ssr: false }
+);
+const LazyOrgChart = dynamic(() => import("@/components/page-blocks/blocks/OrgChart").then((m) => m.OrgChart), {
+  ssr: false,
+});
+const LazyFamilyTree = dynamic(() => import("@/components/page-blocks/blocks/FamilyTree").then((m) => m.FamilyTree), {
+  ssr: false,
+});
 
 export interface BlockRegistryEntry {
   render: (block: BlockInstance) => React.ReactNode;
@@ -168,6 +190,24 @@ export const blockRegistry: Partial<Record<BlockType, BlockRegistryEntry>> = {
       ) : (
         EMPTY_HINT
       );
+    },
+  },
+  "relationship-graph": {
+    render: (block) => {
+      const cfg = block.config as { nodes: GraphNode[]; links: GraphLink[] } | null;
+      return cfg?.nodes?.length ? <LazyRelationshipGraph nodes={cfg.nodes} links={cfg.links ?? []} /> : EMPTY_HINT;
+    },
+  },
+  "org-chart": {
+    render: (block) => {
+      const cfg = block.config as { nodes: OrgNode[]; edges: OrgEdge[] } | null;
+      return cfg?.nodes?.length ? <LazyOrgChart nodes={cfg.nodes} edges={cfg.edges ?? []} /> : EMPTY_HINT;
+    },
+  },
+  "family-tree": {
+    render: (block) => {
+      const cfg = block.config as { members: FamilyMember[]; edges: FamilyEdge[] } | null;
+      return cfg?.members?.length ? <LazyFamilyTree members={cfg.members} edges={cfg.edges ?? []} /> : EMPTY_HINT;
     },
   },
   "week-cards": {

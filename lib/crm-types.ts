@@ -80,34 +80,71 @@ export interface Contact {
 
 // ── Empresas y familias del CRM ────────────────────────────────────────────
 
+export type AccountStatus = "Cliente" | "Prospecto" | "Sin actividad";
+
+export const ACCOUNT_STATUS_TONE: Record<AccountStatus, BadgeTone> = {
+  Cliente: "emerald",
+  Prospecto: "blue",
+  "Sin actividad": "neutral",
+};
+
 export interface CrmAccount {
   id: string;
   name: string;
+  color: string;
   industry: string;
   legalType: string;
   location: string;
   employees: number;
-  estimatedValue: string;
-  status: string;
+  contactsCount: number;
+  status: AccountStatus;
+  /** Etiquetas de producto que aparecen como badges en la tabla, ej. "Key Person". */
+  products: string[];
+  annualPremium: number;
+  policiesCount: number;
   primaryContact: string;
   advisor: string;
+  lastActivity: string;
+  lastActivityAt: string;
+  /** Marcada como "mía" por el asesor que la mira. */
+  owned: boolean;
   order: number;
 }
+
+/** Tono por defecto para las badges de producto en la tabla de Empresas; cualquier nombre no listado cae en "neutral". */
+export const PRODUCT_TAG_TONE: Record<string, BadgeTone> = {
+  "Key Person": "violet",
+  "Buy-Sell": "blue",
+  "Executive Bonus": "amber",
+  "Estate Planning": "emerald",
+  Retirement: "rose",
+  "Life Insurance": "blue",
+  Disability: "neutral",
+};
+
+export type FamilyStatus = "Activa" | "Sin actividad";
+
+export const FAMILY_STATUS_TONE: Record<FamilyStatus, BadgeTone> = {
+  Activa: "emerald",
+  "Sin actividad": "neutral",
+};
 
 export interface CrmFamily {
   id: string;
   name: string;
+  color: string;
   members: number;
   primaryContact: string;
   primaryEmail: string;
   primaryPhone: string;
   location: string;
   activePolicies: number;
-  annualValue: string;
+  annualValue: number;
   nextRenewal: string;
   daysToRenewal: number;
-  status: string;
+  status: FamilyStatus;
   advisor: string;
+  owned: boolean;
   order: number;
 }
 

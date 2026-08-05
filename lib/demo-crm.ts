@@ -11,11 +11,15 @@
 import type {
   Activity,
   Contact,
+  CrmAccount,
   CrmAutomation,
+  CrmFamily,
   CrmSegment,
   CrmTag,
   Deal,
 } from "@/lib/crm-types";
+
+const AVATAR_COLORS = ["#8b5cf6", "#06b6d4", "#f59e0b", "#64748b", "#3b82f6", "#22c55e", "#f472b6", "#6366f1"];
 
 const SCORE_PARTS = (score: number) => {
   // Reparto verosímil del puntaje en sus cinco componentes de 25 puntos.
@@ -182,6 +186,103 @@ export const DEMO_ACTIVITIES: Omit<Activity, "id">[] = ACTIVITY_SEEDS.map(
     source,
     user,
     timeLabel,
+    order: i,
+  })
+);
+
+// ── Empresas ───────────────────────────────────────────────────────────────
+
+type AccountSeed = [
+  string, // nombre
+  string, // industria
+  string, // tipo legal
+  string, // ubicación
+  number, // empleados
+  number, // contactos asociados
+  CrmAccount["status"],
+  string[], // productos principales
+  number, // primas anuales
+  number, // pólizas activas
+  string, // asesor
+  string, // última actividad
+  string, // hace…
+];
+
+const ACCOUNT_SEEDS: AccountSeed[] = [
+  ["González Construction LLC", "Construcción", "LLC", "Miami, FL", 42, 8, "Cliente", ["Key Person", "Buy-Sell"], 2850000, 3, "Andrés Vargas", "Llamada", "Hoy"],
+  ["Martínez Medical Group", "Salud", "Group", "Coral Gables, FL", 68, 12, "Cliente", ["Key Person", "Executive Bonus"], 3450000, 4, "María López", "Envío de propuesta", "Ayer"],
+  ["Rodríguez Holdings LLC", "Inversiones", "Holdings", "Doral, FL", 15, 5, "Prospecto", ["Estate Planning", "Retirement"], 1200000, 2, "Javier Rodríguez", "Reunión", "20 may"],
+  ["Herrera Imports Inc.", "Importación / Distribución", "Inc.", "Pembroke Pines, FL", 30, 6, "Cliente", ["Buy-Sell", "Key Person"], 1950000, 3, "Camila Torres", "Llamada", "19 may"],
+  ["Méndez Accounting Services", "Servicios financieros", "Services", "Weston, FL", 12, 4, "Cliente", ["Life Insurance", "Disability"], 680000, 2, "Andrés Vargas", "Envío de documentos", "18 may"],
+  ["López Real Estate Group", "Bienes raíces", "Group", "Aventura, FL", 24, 7, "Prospecto", ["Key Person", "Estate Planning"], 1100000, 2, "María López", "Reunión", "17 may"],
+  ["Fernández Transport Corp.", "Transporte", "Corp.", "Miami Beach, FL", 56, 9, "Cliente", ["Buy-Sell", "Retirement"], 2150000, 4, "Javier Rodríguez", "Llamada", "16 may"],
+  ["Ruiz Technology Solutions", "Tecnología", "Solutions", "Kendall, FL", 18, 5, "Sin actividad", ["Key Person"], 950000, 1, "Camila Torres", "Sin actividad", "30 abr"],
+];
+
+export const DEMO_ACCOUNTS: Omit<CrmAccount, "id">[] = ACCOUNT_SEEDS.map(
+  ([name, industry, legalType, location, employees, contactsCount, status, products, annualPremium, policiesCount, advisor, lastActivity, lastActivityAt], i) => ({
+    name,
+    color: AVATAR_COLORS[i % AVATAR_COLORS.length],
+    industry,
+    legalType,
+    location,
+    employees,
+    contactsCount,
+    status,
+    products,
+    annualPremium,
+    policiesCount,
+    primaryContact: name.split(" ")[0] + " " + (name.split(" ")[1] ?? ""),
+    advisor,
+    lastActivity,
+    lastActivityAt,
+    owned: i % 3 === 0,
+    order: i,
+  })
+);
+
+// ── Familias ───────────────────────────────────────────────────────────────
+
+type FamilySeed = [
+  string, // apellido
+  number, // miembros
+  string, // contacto principal
+  string, // teléfono
+  string, // ubicación
+  number, // pólizas activas
+  number, // valor anual
+  string, // próxima renovación
+  number, // días para renovar
+  string, // asesor
+];
+
+const FAMILY_SEEDS: FamilySeed[] = [
+  ["González", 5, "Carlos González", "(305) 555-2345", "Miami, FL", 4, 3250000, "15 jul 2027", 58, "Andrés Vargas"],
+  ["Martínez", 4, "Laura Martínez", "(786) 555-9876", "Coral Gables, FL", 3, 2850000, "10 ago 2027", 84, "María López"],
+  ["Rodríguez", 6, "Javier Rodríguez", "(305) 555-6677", "Doral, FL", 5, 4120000, "22 sep 2027", 127, "Javier Rodríguez"],
+  ["Herrera", 3, "Sofía Herrera", "(786) 555-1122", "Pembroke Pines, FL", 2, 1750000, "05 jun 2027", 18, "Camila Torres"],
+  ["Méndez", 4, "Ricardo Méndez", "(305) 555-4433", "Weston, FL", 3, 2650000, "18 jul 2027", 61, "Andrés Vargas"],
+  ["López", 5, "Ana Beatriz López", "(786) 555-7788", "Aventura, FL", 4, 3100000, "12 ago 2027", 86, "María López"],
+  ["Vargas", 3, "Andrés Vargas", "(305) 555-5566", "Miami Beach, FL", 2, 1280000, "30 may 2027", 12, "Andrés Vargas"],
+  ["Cruz", 7, "Patricia Cruz", "(786) 555-8899", "Kendall, FL", 6, 4560000, "28 oct 2027", 163, "Javier Rodríguez"],
+];
+
+export const DEMO_FAMILIES: Omit<CrmFamily, "id">[] = FAMILY_SEEDS.map(
+  ([surname, members, primaryContact, primaryPhone, location, activePolicies, annualValue, nextRenewal, daysToRenewal, advisor], i) => ({
+    name: `Familia ${surname}`,
+    color: AVATAR_COLORS[i % AVATAR_COLORS.length],
+    members,
+    primaryContact,
+    primaryEmail: `${surname.toLowerCase()}.family@email.com`,
+    primaryPhone,
+    location,
+    activePolicies,
+    annualValue,
+    nextRenewal,
+    daysToRenewal,
+    status: "Activa",
+    advisor,
+    owned: i % 3 === 0,
     order: i,
   })
 );

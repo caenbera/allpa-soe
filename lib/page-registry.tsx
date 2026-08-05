@@ -16,6 +16,8 @@ import { RecursosDescargablesView } from "@/components/pages/contenido/RecursosD
 import { ContactosView } from "@/components/pages/crm/ContactosView";
 import { ContactoPerfilView } from "@/components/pages/crm/ContactoPerfilView";
 import { PipelineView } from "@/components/pages/crm/PipelineView";
+import { EmpresasView } from "@/components/pages/crm/EmpresasView";
+import { FamiliasView } from "@/components/pages/crm/FamiliasView";
 
 /** Mapa ruta → componente para las páginas internas ya construidas. */
 export const pageRegistry: Record<string, ComponentType> = {
@@ -35,6 +37,8 @@ export const pageRegistry: Record<string, ComponentType> = {
   "/contenido/recursos-descargables": RecursosDescargablesView,
 
   "/crm/contactos": ContactosView,
+  "/crm/empresas": EmpresasView,
+  "/crm/familias": FamiliasView,
   "/crm/pipeline": PipelineView,
 };
 

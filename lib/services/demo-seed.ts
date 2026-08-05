@@ -11,8 +11,9 @@ import { CRM_COLLECTIONS } from "@/lib/crm-types";
  * 1 → siembra inicial (12 semanas).
  * 2 → plan anual completo (52 semanas) y temas por pilar.
  * 3 → módulo CRM: contactos, oportunidades, actividades y catálogos.
+ * 4 → módulo CRM: empresas y familias.
  */
-const DEMO_SEED_VERSION = 3;
+const DEMO_SEED_VERSION = 4;
 
 /**
  * Siembra el contenido de demostración en la empresa del super administrador,
@@ -42,6 +43,10 @@ export async function seedDemoContent(companyId: string): Promise<boolean> {
   // tanto en la siembra inicial como en el complemento.
   if (currentVersion < 3) await seedCrm(companyId);
 
+  // Empresas y familias llegaron en la versión 4, aparte de las colecciones
+  // de la 3: una empresa que ya tenía CRM las recibe como complemento.
+  if (currentVersion < 4) await seedCrmAccountsFamilies(companyId);
+
   await updateDoc(companyRef, { demoSeedVersion: DEMO_SEED_VERSION, demoSeeded: true });
   return true;
 }
@@ -64,6 +69,20 @@ async function seedCrm(companyId: string) {
   write(CRM_COLLECTIONS.tags, demo.DEMO_TAGS);
   write(CRM_COLLECTIONS.segments, demo.DEMO_SEGMENTS);
   write(CRM_COLLECTIONS.automations, demo.DEMO_AUTOMATIONS);
+
+  await batch.commit();
+}
+
+/** Complemento de la versión 4: empresas y familias, solo si faltan. */
+async function seedCrmAccountsFamilies(companyId: string) {
+  const existing = await getDocs(collection(db, "companies", companyId, CRM_COLLECTIONS.accounts));
+  if (!existing.empty) return;
+
+  const demo = await import("@/lib/demo-crm");
+  const batch = writeBatch(db);
+
+  demo.DEMO_ACCOUNTS.forEach((row) => batch.set(doc(collection(db, "companies", companyId, CRM_COLLECTIONS.accounts)), row));
+  demo.DEMO_FAMILIES.forEach((row) => batch.set(doc(collection(db, "companies", companyId, CRM_COLLECTIONS.families)), row));
 
   await batch.commit();
 }

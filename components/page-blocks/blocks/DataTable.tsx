@@ -33,7 +33,9 @@ export type Cell =
   /** Icono con etiqueta, ej. la fuente por la que llegó un contacto. */
   | { kind: "source"; icon: string; value: string; sub?: string }
   /** Punto de color + texto, ej. la última actividad. */
-  | { kind: "activity"; value: string; sub?: string; color?: string };
+  | { kind: "activity"; value: string; sub?: string; color?: string }
+  /** Varias etiquetas en una celda, ej. los productos principales de una empresa. */
+  | { kind: "badgeList"; items: { label: string; tone?: BadgeTone }[] };
 
 export type BadgeTone = "gold" | "emerald" | "amber" | "blue" | "violet" | "rose" | "neutral";
 
@@ -86,6 +88,8 @@ function sortValue(cell: Cell | undefined): string | number {
       return cell.value ? 1 : 0;
     case "actionChain":
       return cell.steps.length;
+    case "badgeList":
+      return cell.items.length;
     case "initials":
       return cell.label.toLowerCase();
     case "number":
@@ -238,6 +242,19 @@ function CellView({ cell }: { cell: Cell | undefined }) {
             <span className="block truncate text-white/75">{cell.value}</span>
             {cell.sub && <span className="block truncate text-xs text-white/35">{cell.sub}</span>}
           </span>
+        </span>
+      );
+    case "badgeList":
+      return (
+        <span className="flex flex-wrap items-center gap-1">
+          {cell.items.map((item, i) => (
+            <span
+              key={`${item.label}-${i}`}
+              className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${BADGE_TONES[item.tone ?? "neutral"]}`}
+            >
+              {item.label}
+            </span>
+          ))}
         </span>
       );
   }

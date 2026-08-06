@@ -1,6 +1,7 @@
 "use client";
 
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { resolveLucideIcon } from "@/lib/lucide-icon";
 import {
   DropdownMenu,
@@ -22,6 +23,7 @@ export function BlockFrame({
   onDelete,
   bare = false,
   padded = true,
+  collapsible = true,
   className = "",
   children,
 }: {
@@ -34,9 +36,12 @@ export function BlockFrame({
   /** Sin encabezado: para bloques que ya traen su propio título. */
   bare?: boolean;
   padded?: boolean;
+  /** Permite plegar el bloque dejando solo su encabezado. */
+  collapsible?: boolean;
   className?: string;
   children: React.ReactNode;
 }) {
+  const [collapsed, setCollapsed] = useState(false);
   const Icon = resolveLucideIcon(icon);
   const menu = (onEdit || onDelete) && (
     <DropdownMenu>
@@ -78,9 +83,21 @@ export function BlockFrame({
         </span>
         <h3 className="min-w-0 flex-1 truncate font-semibold text-[#f3ecd9]">{title}</h3>
         {actions}
+        {collapsible && (
+          <button
+            type="button"
+            onClick={() => setCollapsed((c) => !c)}
+            aria-expanded={!collapsed}
+            aria-label={collapsed ? `Desplegar ${title}` : `Encoger ${title}`}
+            title={collapsed ? "Desplegar" : "Encoger"}
+            className="text-white/30 transition-colors hover:text-white/60"
+          >
+            <ChevronDown className={`h-4 w-4 transition-transform ${collapsed ? "-rotate-90" : ""}`} />
+          </button>
+        )}
         {menu}
       </div>
-      <div className={padded ? "px-4 py-4" : ""}>{children}</div>
+      {!collapsed && <div className={padded ? "px-4 py-4" : ""}>{children}</div>}
     </div>
   );
 }

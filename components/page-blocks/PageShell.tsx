@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Star, Share2, Download, MoreHorizontal, Plus } from "lucide-react";
+import { Star, Share2, Download, MoreHorizontal, Plus, PanelLeftOpen, PanelRightClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/page-blocks/StatusBadge";
 import { BlockSlot, type BlockSlotProps } from "@/components/page-blocks/BlockSlot";
+import { useAsideCollapsed } from "@/components/page-blocks/use-aside-collapsed";
 import { resolveLucideIcon } from "@/lib/lucide-icon";
 import type { SectionStatus } from "@/lib/types";
 
@@ -47,6 +48,7 @@ export function PageShell({
   // La columna derecha aparece si hay panel propio o si la página admite
   // bloques: si no, la ranura lateral no tendría dónde vivir.
   const hasAside = Boolean(sidePanel) || Boolean(blocks);
+  const { collapsed, toggle } = useAsideCollapsed();
 
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-6 lg:px-8">
@@ -100,15 +102,47 @@ export function PageShell({
 
       {headerAside && <div className="mb-5">{headerAside}</div>}
 
-      <div className={hasAside ? "grid grid-cols-1 gap-6 xl:grid-cols-[1fr_340px]" : ""}>
+      <div
+        className={
+          hasAside
+            ? `grid grid-cols-1 gap-6 ${collapsed ? "xl:grid-cols-[1fr_2.25rem]" : "xl:grid-cols-[1fr_340px]"}`
+            : ""
+        }
+      >
         <div className="min-w-0 space-y-3">
           {children}
           {blocks && <BlockSlot placement="main" {...blocks} />}
         </div>
+
         {hasAside && (
-          <div className="space-y-4">
-            {sidePanel}
-            {blocks && <BlockSlot placement="side" {...blocks} />}
+          <div className="min-w-0">
+            {/* Plegar el panel entero es lo que de verdad ensancha la columna
+                central; encoger un bloque suelto solo lo acorta en vertical. */}
+            <button
+              type="button"
+              onClick={toggle}
+              aria-expanded={!collapsed}
+              title={collapsed ? "Mostrar el panel lateral" : "Ocultar el panel y ensanchar el contenido"}
+              className={`flex items-center gap-1.5 rounded-lg border border-white/10 text-xs text-white/45 transition-colors hover:bg-white/5 hover:text-white/80 ${
+                collapsed ? "h-9 w-9 justify-center" : "mb-3 h-8 w-full justify-center"
+              }`}
+            >
+              {collapsed ? (
+                <PanelLeftOpen className="h-4 w-4" />
+              ) : (
+                <>
+                  <PanelRightClose className="h-3.5 w-3.5" />
+                  Ocultar panel
+                </>
+              )}
+            </button>
+
+            {!collapsed && (
+              <div className="space-y-4">
+                {sidePanel}
+                {blocks && <BlockSlot placement="side" {...blocks} />}
+              </div>
+            )}
           </div>
         )}
       </div>

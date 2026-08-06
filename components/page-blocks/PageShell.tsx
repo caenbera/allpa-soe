@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Star, Share2, Download, MoreHorizontal, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/page-blocks/StatusBadge";
+import { BlockSlot, type BlockSlotProps } from "@/components/page-blocks/BlockSlot";
 import { resolveLucideIcon } from "@/lib/lucide-icon";
 import type { SectionStatus } from "@/lib/types";
 
@@ -16,6 +17,7 @@ export function PageShell({
   headerActions,
   headerAside,
   sidePanel,
+  blocks,
   onNewBlock,
   newBlockLabel = "Nuevo Bloque",
   children,
@@ -31,12 +33,20 @@ export function PageShell({
   /** Tira de datos a la derecha del título (responsable, fechas, etc.). */
   headerAside?: React.ReactNode;
   sidePanel?: React.ReactNode;
+  /**
+   * Bloques que el administrador ha agregado a esta página. Al pasarlos aquí,
+   * la página gana las dos ranuras —cuerpo y panel— sin repetir el mapeo.
+   */
+  blocks?: BlockSlotProps;
   onNewBlock?: () => void;
   newBlockLabel?: string;
   children: React.ReactNode;
 }) {
   const [starred, setStarred] = useState(false);
   const Icon = icon ? resolveLucideIcon(icon) : null;
+  // La columna derecha aparece si hay panel propio o si la página admite
+  // bloques: si no, la ranura lateral no tendría dónde vivir.
+  const hasAside = Boolean(sidePanel) || Boolean(blocks);
 
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-6 lg:px-8">
@@ -90,9 +100,17 @@ export function PageShell({
 
       {headerAside && <div className="mb-5">{headerAside}</div>}
 
-      <div className={sidePanel ? "grid grid-cols-1 gap-6 xl:grid-cols-[1fr_340px]" : ""}>
-        <div className="min-w-0 space-y-3">{children}</div>
-        {sidePanel && <div className="space-y-4">{sidePanel}</div>}
+      <div className={hasAside ? "grid grid-cols-1 gap-6 xl:grid-cols-[1fr_340px]" : ""}>
+        <div className="min-w-0 space-y-3">
+          {children}
+          {blocks && <BlockSlot placement="main" {...blocks} />}
+        </div>
+        {hasAside && (
+          <div className="space-y-4">
+            {sidePanel}
+            {blocks && <BlockSlot placement="side" {...blocks} />}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -4,8 +4,8 @@ import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { Download, Plus } from "lucide-react";
 import { PageShell, PageTabs } from "@/components/page-blocks/PageShell";
-import { AddBlockButton, AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
-import { BlockRenderer } from "@/components/page-blocks/BlockRenderer";
+import { AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
+import { useBlockComposer } from "@/components/page-blocks/use-block-composer";
 import { BlockFrame } from "@/components/page-blocks/BlockFrame";
 import { EmptyState, LoadingState } from "@/components/page-blocks/EmptyState";
 import { KpiStrip } from "@/components/page-blocks/blocks/KpiStrip";
@@ -83,11 +83,11 @@ export function RelacionesView() {
   const [orgSelected, setOrgSelected] = useState<string | null>(null);
   const [familySelected, setFamilySelected] = useState<string | null>(null);
   const [generations, setGenerations] = useState(4);
-  const [createOpen, setCreateOpen] = useState(false);
 
   const nodes = useContent<CrmNode>(CRM_COLLECTIONS.nodes);
   const relationships = useContent<CrmRelationship>(CRM_COLLECTIONS.relationships);
   const { blocks, addBlock, updateBlock, removeBlock } = usePageConfig("/crm/relaciones");
+  const composer = useBlockComposer(addBlock);
 
   const byKey = useMemo(() => new Map(nodes.items.map((n) => [n.key, n])), [nodes.items]);
 
@@ -378,23 +378,8 @@ export function RelacionesView() {
   const isEmpty = !loading && nodes.items.length === 0;
 
   // ── Panel lateral, distinto en cada pestaña ──────────────────────────────
-  const extraBlocks = (
-    <>
-      {blocks.map((block) => (
-        <BlockRenderer
-          key={block.id}
-          block={block}
-          onUpdate={(patch) => updateBlock(block.id, patch)}
-          onDelete={() => removeBlock(block.id)}
-        />
-      ))}
-      <AddBlockButton onClick={() => setCreateOpen(true)} />
-    </>
-  );
-
-  const sidePanel = isEmpty ? (
-    extraBlocks
-  ) : (
+  // Vacía muestra solo la ranura de bloques que añade PageShell.
+  const sidePanel = isEmpty ? null : (
     <>
       {tab === "grafo" && graphNode && (
         <>
@@ -539,7 +524,6 @@ export function RelacionesView() {
         </BlockFrame>
       )}
 
-      {extraBlocks}
     </>
   );
 
@@ -550,6 +534,7 @@ export function RelacionesView() {
       icon="Workflow"
       starrable={false}
       sidePanel={sidePanel}
+      blocks={{ items: blocks, onUpdate: updateBlock, onDelete: removeBlock, onAdd: composer.openFor }}
       headerActions={
         <>
           <Button variant="outline" size="sm" className="border-white/12 bg-white/[0.03] text-white/70 hover:bg-white/[0.06]">
@@ -720,7 +705,7 @@ export function RelacionesView() {
         </>
       )}
 
-      <AddBlockDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addBlock} />
+      <AddBlockDialog {...composer.dialogProps} />
     </PageShell>
   );
 }

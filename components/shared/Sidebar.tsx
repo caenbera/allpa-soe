@@ -8,7 +8,7 @@ import { LayoutDashboard, PanelLeftClose, PanelLeftOpen, Plus, LogOut, ChevronsU
 import { useUIStore } from "@/store/ui";
 import { useAuthStore } from "@/store/auth";
 import { brandLogos } from "@/lib/brand";
-import { navTree as staticNavTree, findActivePath, customBlocksToNavNodes, type NavNode } from "@/lib/nav-tree";
+import { navTree as staticNavTree, customBlocksToNavNodes, type NavNode } from "@/lib/nav-tree";
 import { NavNodeRenderer, CollapsedNavIcons } from "@/components/shared/SidebarNavTree";
 import { CreateBlockModal } from "@/components/sidebar-builder/CreateBlockModal";
 import { InviteMemberModal } from "@/components/sidebar-builder/InviteMemberModal";
@@ -70,7 +70,6 @@ export function Sidebar() {
     () => [...staticNavTree, ...customBlocksToNavNodes(customBlocks, customPagesByBlock)],
     [customBlocks, customPagesByBlock]
   );
-  const activeTrail = findActivePath(navTree, pathname) ?? [];
 
   const displayName = user?.displayName ?? (firebaseReady ? "Cuenta" : "Modo demo");
   const roleLabel = role === "superadmin" ? "Super administrador" : role === "member" ? "Miembro" : "Administrador";
@@ -162,7 +161,7 @@ export function Sidebar() {
 
             <div className="space-y-0.5">
               {navTree.map((node) => (
-                <NavNodeRenderer key={node.key} node={node} depth={0} activeTrail={activeTrail} />
+                <NavNodeRenderer key={node.key} node={node} depth={0} />
               ))}
             </div>
 

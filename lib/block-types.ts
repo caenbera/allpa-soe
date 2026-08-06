@@ -6,6 +6,10 @@
  * Para agregar un tipo nuevo: añadirlo aquí y registrarlo en el registry.
  * Queda disponible automáticamente en el selector de "Agregar bloque" de
  * todas las páginas.
+ *
+ * `blockRegistry` está tipado como `Record<BlockType, …>` completo justamente
+ * para que olvidarse del registro sea un error de compilación: ofrecer en el
+ * selector un tipo que luego no se pinta es peor que no ofrecerlo.
  */
 
 export type BlockType =
@@ -22,10 +26,6 @@ export type BlockType =
   | "person-card"
   | "media-preview"
   | "timeline"
-  | "progress-rows"
-  | "resource-grid"
-  | "nested-tree"
-  | "calendar-grid"
   | "bar-chart"
   | "funnel-chart"
   | "rich-text"
@@ -50,6 +50,17 @@ export type BlockType =
   | "org-chart"
   | "family-tree";
 
+/** Dónde se pinta un bloque dentro de la página. */
+export type BlockPlacement = "main" | "side";
+
+export const BLOCK_PLACEMENTS: { value: BlockPlacement; label: string; description: string; icon: string }[] = [
+  { value: "main", label: "Cuerpo de la página", description: "Ancho completo, junto al contenido principal.", icon: "LayoutPanelTop" },
+  { value: "side", label: "Panel lateral", description: "Columna estrecha de la derecha.", icon: "PanelRight" },
+];
+
+/** Los bloques guardados antes de que existiera la opción viven en el lateral. */
+export const DEFAULT_PLACEMENT: BlockPlacement = "side";
+
 export interface BlockInstance<TConfig = unknown> {
   id: string;
   type: BlockType;
@@ -59,56 +70,81 @@ export interface BlockInstance<TConfig = unknown> {
   config: TConfig;
   /** Oculta el encabezado del marco cuando el bloque ya trae su propio título. */
   bare?: boolean;
+  /** Ausente en los bloques creados antes de esta opción: se tratan como `side`. */
+  placement?: BlockPlacement;
 }
+
+/** Agrupación del selector, para no dar una lista plana de casi cuarenta. */
+export type BlockCategory = "indicadores" | "datos" | "graficos" | "contenido" | "personas" | "planificacion" | "relaciones";
+
+export const BLOCK_CATEGORIES: { value: BlockCategory; label: string }[] = [
+  { value: "indicadores", label: "Indicadores" },
+  { value: "graficos", label: "Gráficos" },
+  { value: "datos", label: "Datos y listas" },
+  { value: "contenido", label: "Contenido y notas" },
+  { value: "personas", label: "Personas y fichas" },
+  { value: "planificacion", label: "Planificación" },
+  { value: "relaciones", label: "Relaciones" },
+];
 
 export interface BlockTypeDef {
   type: BlockType;
   label: string;
   description: string;
   icon: string;
+  category: BlockCategory;
 }
 
 export const BLOCK_TYPE_CATALOG: BlockTypeDef[] = [
-  { type: "kpi-strip", label: "Indicadores", description: "Fila de tarjetas con métricas clave.", icon: "LayoutGrid" },
-  { type: "data-table", label: "Tabla de datos", description: "Listado ordenable con filtros y paginación.", icon: "Table" },
-  { type: "filter-toolbar", label: "Barra de filtros", description: "Buscador, filtros y exportación.", icon: "Filter" },
-  { type: "donut-chart", label: "Gráfico de dona", description: "Distribución por categoría con leyenda.", icon: "PieChart" },
-  { type: "info-card", label: "Ficha de información", description: "Lista de campos y valores.", icon: "ClipboardList" },
-  { type: "file-list", label: "Lista de archivos", description: "Documentos y recursos adjuntos.", icon: "FileText" },
-  { type: "checklist-panel", label: "Checklist", description: "Lista de verificación con progreso.", icon: "CheckSquare" },
-  { type: "notes-panel", label: "Notas", description: "Notas rápidas del equipo.", icon: "StickyNote" },
-  { type: "asset-progress", label: "Activos con progreso", description: "Tarjetas de activos y su avance.", icon: "Boxes" },
-  { type: "flow-strip", label: "Flujo de pasos", description: "Etapas de un proceso en secuencia.", icon: "Workflow" },
-  { type: "person-card", label: "Ficha de persona", description: "Datos de contacto de un invitado o responsable.", icon: "UserRound" },
-  { type: "media-preview", label: "Vista previa multimedia", description: "Video o audio con reproductor.", icon: "PlayCircle" },
-  { type: "timeline", label: "Línea de tiempo", description: "Hitos con fecha y estado.", icon: "GitCommitHorizontal" },
-  { type: "progress-rows", label: "Filas de progreso", description: "Elementos con barra de avance y métricas.", icon: "BarChart3" },
-  { type: "resource-grid", label: "Rejilla de recursos", description: "Tarjetas con portada y métricas.", icon: "Grid3x3" },
-  { type: "nested-tree", label: "Estructura por módulos", description: "Módulos y lecciones anidadas.", icon: "ListTree" },
-  { type: "calendar-grid", label: "Calendario", description: "Vista de semanas agrupadas por mes.", icon: "CalendarDays" },
-  { type: "bar-chart", label: "Gráfico de barras", description: "Comparativa por categoría.", icon: "BarChart3" },
-  { type: "funnel-chart", label: "Embudo", description: "Etapas de conversión.", icon: "Filter" },
-  { type: "rich-text", label: "Texto enriquecido", description: "Bloque de redacción libre.", icon: "PenLine" },
-  { type: "week-strip", label: "Tira de semanas", description: "Carrusel S01–S52 para saltar entre semanas.", icon: "CalendarRange" },
-  { type: "week-cards", label: "Tarjetas de semana", description: "Semanas con invitado, estado y activos generados.", icon: "CalendarDays" },
-  { type: "pillar-cards", label: "Tarjetas de pilar", description: "Pilares estratégicos con sus temas y avance.", icon: "Target" },
-  { type: "ecosystem-hub", label: "Ecosistema de contenido", description: "Diagrama radial de un episodio a sus activos.", icon: "Share2" },
-  { type: "kpi-progress", label: "Indicadores con barra", description: "Métricas con su progreso.", icon: "TrendingUp" },
-  { type: "upcoming-episodes", label: "Próximos episodios", description: "Las siguientes semanas del plan.", icon: "CalendarClock" },
-  { type: "score-ring", label: "Anillo de puntaje", description: "Puntaje de 0 a 100 con color por tramo.", icon: "Gauge" },
-  { type: "tag-cloud", label: "Etiquetas", description: "Chips de colores que se agregan y quitan.", icon: "Tags" },
-  { type: "stat-tiles", label: "Tarjetas de métrica", description: "Cifras apiladas con icono y variación.", icon: "LayoutGrid" },
-  { type: "activity-feed", label: "Registro de actividad", description: "Llamadas, emails, reuniones y cambios.", icon: "History" },
-  { type: "ranked-bars", label: "Ranking con barras", description: "Comparativa ordenada de mayor a menor.", icon: "BarChart3" },
-  { type: "insight-list", label: "Hallazgos", description: "Conclusiones en lenguaje llano.", icon: "Lightbulb" },
-  { type: "profile-header", label: "Encabezado de ficha", description: "Avatar, estado y datos de un registro.", icon: "IdCard" },
-  { type: "detail-drawer", label: "Panel de detalle", description: "Ficha lateral con secciones plegables.", icon: "PanelRight" },
-  { type: "line-chart", label: "Gráfico de líneas", description: "Evolución en el tiempo.", icon: "TrendingUp" },
-  { type: "column-chart", label: "Gráfico de columnas", description: "Volumen por periodo.", icon: "BarChart4" },
-  { type: "kanban-board", label: "Tablero por etapas", description: "Tarjetas arrastrables entre columnas.", icon: "Columns3" },
-  { type: "relationship-graph", label: "Grafo de relaciones", description: "Personas, empresas y productos conectados.", icon: "Workflow" },
-  { type: "org-chart", label: "Organigrama", description: "Estructura jerárquica con participación.", icon: "Network" },
-  { type: "family-tree", label: "Árbol familiar", description: "Miembros de la familia por generación.", icon: "Users2" },
+  // Indicadores
+  { type: "kpi-strip", label: "Indicadores", description: "Fila de tarjetas con métricas clave.", icon: "LayoutGrid", category: "indicadores" },
+  { type: "stat-tiles", label: "Tarjetas de métrica", description: "Cifras apiladas con icono y variación.", icon: "LayoutGrid", category: "indicadores" },
+  { type: "kpi-progress", label: "Indicadores con barra", description: "Métricas con su progreso.", icon: "TrendingUp", category: "indicadores" },
+  { type: "score-ring", label: "Anillo de puntaje", description: "Puntaje de 0 a 100 con color por tramo.", icon: "Gauge", category: "indicadores" },
+
+  // Gráficos
+  { type: "donut-chart", label: "Gráfico de dona", description: "Distribución por categoría con leyenda.", icon: "PieChart", category: "graficos" },
+  { type: "bar-chart", label: "Gráfico de barras", description: "Comparativa por categoría.", icon: "BarChart3", category: "graficos" },
+  { type: "line-chart", label: "Gráfico de líneas", description: "Evolución en el tiempo.", icon: "TrendingUp", category: "graficos" },
+  { type: "column-chart", label: "Gráfico de columnas", description: "Volumen por periodo.", icon: "BarChart4", category: "graficos" },
+  { type: "funnel-chart", label: "Embudo", description: "Etapas de conversión.", icon: "Filter", category: "graficos" },
+  { type: "ranked-bars", label: "Ranking con barras", description: "Comparativa ordenada de mayor a menor.", icon: "BarChart3", category: "graficos" },
+  { type: "insight-list", label: "Hallazgos", description: "Conclusiones en lenguaje llano.", icon: "Lightbulb", category: "graficos" },
+
+  // Datos y listas
+  { type: "data-table", label: "Tabla de datos", description: "Listado ordenable con filtros y paginación.", icon: "Table", category: "datos" },
+  { type: "filter-toolbar", label: "Barra de filtros", description: "Buscador y filtros desplegables.", icon: "Filter", category: "datos" },
+  { type: "kanban-board", label: "Tablero por etapas", description: "Tarjetas arrastrables entre columnas.", icon: "Columns3", category: "datos" },
+  { type: "file-list", label: "Lista de archivos", description: "Documentos y recursos adjuntos.", icon: "FileText", category: "datos" },
+  { type: "asset-progress", label: "Activos con progreso", description: "Tarjetas de activos y su avance.", icon: "Boxes", category: "datos" },
+
+  // Contenido y notas
+  { type: "rich-text", label: "Texto enriquecido", description: "Bloque de redacción libre.", icon: "PenLine", category: "contenido" },
+  { type: "notes-panel", label: "Notas", description: "Notas rápidas del equipo.", icon: "StickyNote", category: "contenido" },
+  { type: "checklist-panel", label: "Checklist", description: "Lista de verificación con progreso.", icon: "CheckSquare", category: "contenido" },
+  { type: "info-card", label: "Ficha de información", description: "Lista de campos y valores.", icon: "ClipboardList", category: "contenido" },
+  { type: "media-preview", label: "Vista previa multimedia", description: "Video o audio con reproductor.", icon: "PlayCircle", category: "contenido" },
+  { type: "tag-cloud", label: "Etiquetas", description: "Chips de colores que se agregan y quitan.", icon: "Tags", category: "contenido" },
+
+  // Personas y fichas
+  { type: "person-card", label: "Ficha de persona", description: "Datos de contacto de un invitado o responsable.", icon: "UserRound", category: "personas" },
+  { type: "profile-header", label: "Encabezado de ficha", description: "Avatar, estado y datos de un registro.", icon: "IdCard", category: "personas" },
+  { type: "detail-drawer", label: "Panel de detalle", description: "Ficha lateral con secciones plegables.", icon: "PanelRight", category: "personas" },
+  { type: "activity-feed", label: "Registro de actividad", description: "Llamadas, emails, reuniones y cambios.", icon: "History", category: "personas" },
+
+  // Planificación
+  { type: "timeline", label: "Línea de tiempo", description: "Hitos con fecha y estado.", icon: "GitCommitHorizontal", category: "planificacion" },
+  { type: "flow-strip", label: "Flujo de pasos", description: "Etapas de un proceso en secuencia.", icon: "Workflow", category: "planificacion" },
+  { type: "week-strip", label: "Tira de semanas", description: "Carrusel S01–S52 para saltar entre semanas.", icon: "CalendarRange", category: "planificacion" },
+  { type: "week-cards", label: "Tarjetas de semana", description: "Semanas con invitado, estado y activos generados.", icon: "CalendarDays", category: "planificacion" },
+  { type: "pillar-cards", label: "Tarjetas de pilar", description: "Pilares estratégicos con sus temas y avance.", icon: "Target", category: "planificacion" },
+  { type: "upcoming-episodes", label: "Próximos episodios", description: "Las siguientes semanas del plan.", icon: "CalendarClock", category: "planificacion" },
+
+  // Relaciones
+  { type: "relationship-graph", label: "Grafo de relaciones", description: "Personas, empresas y productos conectados.", icon: "Workflow", category: "relaciones" },
+  { type: "org-chart", label: "Organigrama", description: "Estructura jerárquica con participación.", icon: "Network", category: "relaciones" },
+  { type: "family-tree", label: "Árbol familiar", description: "Miembros de la familia por generación.", icon: "Users2", category: "relaciones" },
+  { type: "ecosystem-hub", label: "Ecosistema de contenido", description: "Diagrama radial de un episodio a sus activos.", icon: "Share2", category: "relaciones" },
 ];
 
 export function getBlockTypeDef(type: BlockType): BlockTypeDef | undefined {

@@ -4,8 +4,8 @@ import { useMemo, useState } from "react";
 import { ArrowRight, List, Plus, TrendingUp } from "lucide-react";
 import { PageShell } from "@/components/page-blocks/PageShell";
 import { BlockFrame } from "@/components/page-blocks/BlockFrame";
-import { AddBlockButton, AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
-import { BlockRenderer } from "@/components/page-blocks/BlockRenderer";
+import { AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
+import { useBlockComposer } from "@/components/page-blocks/use-block-composer";
 import { EmptyState, LoadingState } from "@/components/page-blocks/EmptyState";
 import { KpiStrip } from "@/components/page-blocks/blocks/KpiStrip";
 import { DonutChart } from "@/components/page-blocks/blocks/DonutChart";
@@ -19,11 +19,11 @@ import { CONTENT_COLLECTIONS, type Episode, type Pillar } from "@/lib/content-ty
 
 export function TemasEstrategicosView() {
   const [search, setSearch] = useState("");
-  const [createOpen, setCreateOpen] = useState(false);
 
   const pillars = useContent<Pillar>(CONTENT_COLLECTIONS.pillars);
   const episodes = useContent<Episode>(CONTENT_COLLECTIONS.episodes);
   const { blocks, addBlock, updateBlock, removeBlock } = usePageConfig("/contenido/temas-estrategicos");
+  const composer = useBlockComposer(addBlock);
 
   const stats = useMemo(
     () =>
@@ -95,15 +95,6 @@ export function TemasEstrategicosView() {
         </>
       )}
 
-      {blocks.map((block) => (
-        <BlockRenderer
-          key={block.id}
-          block={block}
-          onUpdate={(patch) => updateBlock(block.id, patch)}
-          onDelete={() => removeBlock(block.id)}
-        />
-      ))}
-      <AddBlockButton onClick={() => setCreateOpen(true)} />
     </>
   );
 
@@ -114,6 +105,7 @@ export function TemasEstrategicosView() {
       icon="Target"
       starrable={false}
       sidePanel={sidePanel}
+      blocks={{ items: blocks, onUpdate: updateBlock, onDelete: removeBlock, onAdd: composer.openFor }}
       headerActions={
         <>
           <Button variant="outline" size="sm" className="border-white/12 bg-white/[0.03] text-white/70 hover:bg-white/[0.06]">
@@ -210,7 +202,7 @@ export function TemasEstrategicosView() {
         </>
       )}
 
-      <AddBlockDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addBlock} />
+      <AddBlockDialog {...composer.dialogProps} />
     </PageShell>
   );
 }

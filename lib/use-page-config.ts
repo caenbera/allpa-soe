@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuthStore } from "@/store/auth";
 import { firebaseReady } from "@/lib/firebase";
 import { getPageConfig, savePageConfig, pageKeyFromPath, type PageConfig } from "@/lib/services/page-config";
-import type { BlockInstance, BlockType } from "@/lib/block-types";
+import { DEFAULT_PLACEMENT, type BlockInstance, type BlockPlacement, type BlockType } from "@/lib/block-types";
 import type { MetaFieldState } from "@/components/page-blocks/MetaBar";
 import type { AccordionSectionData } from "@/components/page-blocks/AccordionSection";
 import type { SectionPriority } from "@/lib/types";
@@ -119,8 +119,11 @@ export function usePageConfig(
   );
 
   const addBlock = useCallback(
-    ({ type, title, icon }: { type: BlockType; title: string; icon: string }) => {
-      commitBlocks([...blocks, { id: `block-${Date.now()}`, type, title, icon, config: null }]);
+    ({ type, title, icon, placement }: { type: BlockType; title: string; icon: string; placement?: BlockPlacement }) => {
+      commitBlocks([
+        ...blocks,
+        { id: `block-${Date.now()}`, type, title, icon, config: null, placement: placement ?? DEFAULT_PLACEMENT },
+      ]);
     },
     [blocks, commitBlocks]
   );

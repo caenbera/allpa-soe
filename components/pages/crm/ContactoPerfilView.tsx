@@ -5,8 +5,8 @@ import Link from "next/link";
 import { ArrowLeft, Pencil, Plus } from "lucide-react";
 import { PageShell, PageTabs } from "@/components/page-blocks/PageShell";
 import { BlockFrame } from "@/components/page-blocks/BlockFrame";
-import { AddBlockButton, AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
-import { BlockRenderer } from "@/components/page-blocks/BlockRenderer";
+import { AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
+import { useBlockComposer } from "@/components/page-blocks/use-block-composer";
 import { EmptyState, LoadingState } from "@/components/page-blocks/EmptyState";
 import { ProfileHeader } from "@/components/page-blocks/blocks/ProfileHeader";
 import { InfoCard } from "@/components/page-blocks/blocks/InfoCard";
@@ -30,11 +30,11 @@ const TABS = [
 
 export function ContactoPerfilView({ contactId }: { contactId: string }) {
   const [tab, setTab] = useState("resumen");
-  const [createOpen, setCreateOpen] = useState(false);
 
   const contacts = useContent<Contact>(CRM_COLLECTIONS.contacts);
   const activities = useContent<Activity>(CRM_COLLECTIONS.activities);
   const { blocks, addBlock, updateBlock, removeBlock } = usePageConfig(`/crm/contactos/${contactId}`);
+  const composer = useBlockComposer(addBlock);
 
   const contact = contacts.items.find((c) => c.id === contactId) ?? null;
 
@@ -54,20 +54,6 @@ export function ContactoPerfilView({ contactId }: { contactId: string }) {
   }, [activities.items, contact]);
 
   const loading = contacts.loading || activities.loading;
-
-  const extraBlocks = (
-    <>
-      {blocks.map((block) => (
-        <BlockRenderer
-          key={block.id}
-          block={block}
-          onUpdate={(patch) => updateBlock(block.id, patch)}
-          onDelete={() => removeBlock(block.id)}
-        />
-      ))}
-      <AddBlockButton onClick={() => setCreateOpen(true)} />
-    </>
-  );
 
   if (loading) {
     return (
@@ -107,8 +93,6 @@ export function ContactoPerfilView({ contactId }: { contactId: string }) {
           showPercent={false}
         />
       </BlockFrame>
-
-      {extraBlocks}
     </>
   );
 
@@ -118,6 +102,7 @@ export function ContactoPerfilView({ contactId }: { contactId: string }) {
       description={contact.role}
       starrable={false}
       sidePanel={sidePanel}
+      blocks={{ items: blocks, onUpdate: updateBlock, onDelete: removeBlock, onAdd: composer.openFor }}
       headerActions={
         <>
           <Link
@@ -247,7 +232,7 @@ export function ContactoPerfilView({ contactId }: { contactId: string }) {
         </BlockFrame>
       )}
 
-      <AddBlockDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addBlock} />
+      <AddBlockDialog {...composer.dialogProps} />
     </PageShell>
   );
 }

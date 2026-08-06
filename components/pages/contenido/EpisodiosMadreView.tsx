@@ -4,8 +4,8 @@ import { useMemo, useState } from "react";
 import { List, Plus } from "lucide-react";
 import { PageShell, PageTabs } from "@/components/page-blocks/PageShell";
 import { BlockFrame } from "@/components/page-blocks/BlockFrame";
-import { AddBlockButton, AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
-import { BlockRenderer } from "@/components/page-blocks/BlockRenderer";
+import { AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
+import { useBlockComposer } from "@/components/page-blocks/use-block-composer";
 import { EmptyState, LoadingState } from "@/components/page-blocks/EmptyState";
 import { KpiStrip } from "@/components/page-blocks/blocks/KpiStrip";
 import { FilterToolbar } from "@/components/page-blocks/blocks/FilterToolbar";
@@ -28,11 +28,11 @@ export function EpisodiosMadreView() {
   const [tab, setTab] = useState("todos");
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<Record<string, string>>({});
-  const [createOpen, setCreateOpen] = useState(false);
 
   const episodes = useContent<Episode>(CONTENT_COLLECTIONS.episodes);
   const pillars = useContent<Pillar>(CONTENT_COLLECTIONS.pillars);
   const { blocks, addBlock, updateBlock, removeBlock } = usePageConfig("/contenido/episodios-madre");
+  const composer = useBlockComposer(addBlock);
 
   const pillarOf = (id: string | null) => pillars.items.find((p) => p.id === id);
 
@@ -115,15 +115,6 @@ export function EpisodiosMadreView() {
         </>
       )}
 
-      {blocks.map((block) => (
-        <BlockRenderer
-          key={block.id}
-          block={block}
-          onUpdate={(patch) => updateBlock(block.id, patch)}
-          onDelete={() => removeBlock(block.id)}
-        />
-      ))}
-      <AddBlockButton onClick={() => setCreateOpen(true)} />
     </>
   );
 
@@ -134,6 +125,7 @@ export function EpisodiosMadreView() {
       icon="Mic"
       starrable={false}
       sidePanel={sidePanel}
+      blocks={{ items: blocks, onUpdate: updateBlock, onDelete: removeBlock, onAdd: composer.openFor }}
       headerActions={
         <>
           <Button variant="outline" size="sm" className="border-white/12 bg-white/[0.03] text-white/70 hover:bg-white/[0.06]">
@@ -209,7 +201,7 @@ export function EpisodiosMadreView() {
         </>
       )}
 
-      <AddBlockDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addBlock} />
+      <AddBlockDialog {...composer.dialogProps} />
     </PageShell>
   );
 }

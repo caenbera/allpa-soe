@@ -3,8 +3,8 @@
 import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import { PageShell } from "@/components/page-blocks/PageShell";
-import { AddBlockButton, AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
-import { BlockRenderer } from "@/components/page-blocks/BlockRenderer";
+import { AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
+import { useBlockComposer } from "@/components/page-blocks/use-block-composer";
 import { BlockFrame } from "@/components/page-blocks/BlockFrame";
 import { EmptyState, LoadingState } from "@/components/page-blocks/EmptyState";
 import { KpiStrip } from "@/components/page-blocks/blocks/KpiStrip";
@@ -20,10 +20,10 @@ import { CRM_COLLECTIONS, type CrmSegment } from "@/lib/crm-types";
 export function SegmentosView() {
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<Record<string, string>>({});
-  const [createOpen, setCreateOpen] = useState(false);
 
   const segments = useContent<CrmSegment>(CRM_COLLECTIONS.segments);
   const { blocks, addBlock, updateBlock, removeBlock } = usePageConfig("/crm/segmentos");
+  const composer = useBlockComposer(addBlock);
 
   const stats = useMemo(() => {
     const items = segments.items;
@@ -111,15 +111,6 @@ export function SegmentosView() {
         </>
       )}
 
-      {blocks.map((block) => (
-        <BlockRenderer
-          key={block.id}
-          block={block}
-          onUpdate={(patch) => updateBlock(block.id, patch)}
-          onDelete={() => removeBlock(block.id)}
-        />
-      ))}
-      <AddBlockButton onClick={() => setCreateOpen(true)} />
     </>
   );
 
@@ -130,6 +121,7 @@ export function SegmentosView() {
       icon="Filter"
       starrable={false}
       sidePanel={sidePanel}
+      blocks={{ items: blocks, onUpdate: updateBlock, onDelete: removeBlock, onAdd: composer.openFor }}
       headerActions={
         <Button className="border-0 bg-gradient-to-b from-[#f5da93] to-[#c98f1f] font-semibold text-[#241a05] hover:brightness-105">
           <Plus className="mr-1.5 h-4 w-4" />
@@ -197,7 +189,7 @@ export function SegmentosView() {
         </>
       )}
 
-      <AddBlockDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addBlock} />
+      <AddBlockDialog {...composer.dialogProps} />
     </PageShell>
   );
 }

@@ -4,8 +4,8 @@ import { useMemo, useState } from "react";
 import { List, MoreHorizontal, Plus } from "lucide-react";
 import { PageShell, PageTabs } from "@/components/page-blocks/PageShell";
 import { BlockFrame } from "@/components/page-blocks/BlockFrame";
-import { AddBlockButton, AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
-import { BlockRenderer } from "@/components/page-blocks/BlockRenderer";
+import { AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
+import { useBlockComposer } from "@/components/page-blocks/use-block-composer";
 import { EmptyState, LoadingState } from "@/components/page-blocks/EmptyState";
 import { KpiStrip } from "@/components/page-blocks/blocks/KpiStrip";
 import { FilterToolbar, type ViewMode } from "@/components/page-blocks/blocks/FilterToolbar";
@@ -94,11 +94,11 @@ export function RecursosDescargablesView() {
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [view, setView] = useState<ViewMode>("grid");
-  const [createOpen, setCreateOpen] = useState(false);
 
   const resources = useContent<Downloadable>(CONTENT_COLLECTIONS.downloadables);
   const pillars = useContent<Pillar>(CONTENT_COLLECTIONS.pillars);
   const { blocks, addBlock, updateBlock, removeBlock } = usePageConfig("/contenido/recursos-descargables");
+  const composer = useBlockComposer(addBlock);
 
   const pillarOf = (id: string | null) => pillars.items.find((p) => p.id === id);
 
@@ -184,15 +184,6 @@ export function RecursosDescargablesView() {
         </>
       )}
 
-      {blocks.map((block) => (
-        <BlockRenderer
-          key={block.id}
-          block={block}
-          onUpdate={(patch) => updateBlock(block.id, patch)}
-          onDelete={() => removeBlock(block.id)}
-        />
-      ))}
-      <AddBlockButton onClick={() => setCreateOpen(true)} />
     </>
   );
 
@@ -203,6 +194,7 @@ export function RecursosDescargablesView() {
       icon="Download"
       starrable={false}
       sidePanel={sidePanel}
+      blocks={{ items: blocks, onUpdate: updateBlock, onDelete: removeBlock, onAdd: composer.openFor }}
       headerActions={
         <>
           <Button variant="outline" size="sm" className="border-white/12 bg-white/[0.03] text-white/70 hover:bg-white/[0.06]">
@@ -313,7 +305,7 @@ export function RecursosDescargablesView() {
         </>
       )}
 
-      <AddBlockDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addBlock} />
+      <AddBlockDialog {...composer.dialogProps} />
     </PageShell>
   );
 }

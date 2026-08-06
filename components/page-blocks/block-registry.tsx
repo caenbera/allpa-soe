@@ -3,8 +3,15 @@
 // Los bloques son todos interactivos y, además, los tres de grafo se cargan con
 // `next/dynamic` + `ssr: false`, que solo es válido en un módulo de cliente.
 
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import { RichTextEditor } from "@/components/page-blocks/RichTextEditor";
+import { DataTable, type ColumnDef, type RowData } from "@/components/page-blocks/blocks/DataTable";
+import { FilterToolbar, type FilterDef } from "@/components/page-blocks/blocks/FilterToolbar";
+import { BarChart, FunnelChart, type BarSeries, type FunnelStep } from "@/components/page-blocks/blocks/Charts";
+import { WeekStrip, type WeekChip } from "@/components/page-blocks/blocks/WeekStrip";
+import { DetailDrawer, type DetailDrawerData } from "@/components/page-blocks/blocks/DetailDrawer";
+import { KanbanBoard, type KanbanCard, type KanbanColumn } from "@/components/page-blocks/blocks/KanbanBoard";
 import { KpiStrip, type KpiItem } from "@/components/page-blocks/blocks/KpiStrip";
 import { DonutChart, type DonutSlice } from "@/components/page-blocks/blocks/DonutChart";
 import { InfoCard, type InfoRow } from "@/components/page-blocks/blocks/InfoCard";
@@ -59,13 +66,51 @@ export interface BlockRegistryEntry {
 const EMPTY_HINT = <p className="py-6 text-center text-sm text-white/35">Bloque vacío — edítalo para agregar contenido.</p>;
 
 /**
+ * Algunos bloques son interactivos y, cuando se agregan desde el selector, no
+ * tienen una página que les lleve el estado. Estos envoltorios se lo dan.
+ */
+function StandaloneFilterToolbar({ config }: { config: { placeholder?: string; filters?: FilterDef[] } | null }) {
+  const [search, setSearch] = useState("");
+  const [values, setValues] = useState<Record<string, string>>({});
+  return (
+    <FilterToolbar
+      search={search}
+      onSearchChange={setSearch}
+      searchPlaceholder={config?.placeholder ?? "Buscar…"}
+      filters={config?.filters ?? []}
+      values={values}
+      onFilterChange={(id, value) => setValues((prev) => ({ ...prev, [id]: value }))}
+    />
+  );
+}
+
+function StandaloneWeekStrip({ weeks }: { weeks: WeekChip[] }) {
+  const [active, setActive] = useState(weeks[0]?.week ?? 1);
+  return <WeekStrip weeks={weeks} active={active} onSelect={setActive} />;
+}
+
+function StandaloneKanban({ columns, cards }: { columns: KanbanColumn[]; cards: KanbanCard[] }) {
+  const [items, setItems] = useState(cards);
+  return (
+    <KanbanBoard
+      columns={columns}
+      cards={items}
+      onMove={(cardId, toColumnId) =>
+        setItems((prev) => prev.map((c) => (c.id === cardId ? { ...c, columnId: toColumnId } : c)))
+      }
+    />
+  );
+}
+
+/**
  * Mapa tipo de bloque → cómo renderizarlo. Mismo patrón que
  * `lib/page-registry.tsx` para las páginas.
  *
- * Los tipos que aún no están aquí muestran un aviso de "no disponible" en
- * lugar de romper la página.
+ * El `Record` es completo a propósito: si se añade un tipo al catálogo y se
+ * olvida registrarlo aquí, TypeScript no compila. Antes era `Partial` y por
+ * eso llegaron a ofrecerse doce tipos que solo pintaban "no disponible".
  */
-export const blockRegistry: Partial<Record<BlockType, BlockRegistryEntry>> = {
+export const blockRegistry: Record<BlockType, BlockRegistryEntry> = {
   "rich-text": {
     render: (block) => <RichTextEditor content={(block.config as string) ?? ""} />,
   },
@@ -123,12 +168,6 @@ export const blockRegistry: Partial<Record<BlockType, BlockRegistryEntry>> = {
     render: (block) => {
       const person = block.config as PersonInfo | null;
       return person ? <PersonCard person={person} /> : EMPTY_HINT;
-    },
-  },
-  timeline: {
-    render: (block) => {
-      const steps = (block.config as TimelineStep[]) ?? [];
-      return steps.length ? <Timeline steps={steps} /> : EMPTY_HINT;
     },
   },
   "score-ring": {
@@ -190,6 +229,53 @@ export const blockRegistry: Partial<Record<BlockType, BlockRegistryEntry>> = {
       ) : (
         EMPTY_HINT
       );
+    },
+  },
+  "data-table": {
+    render: (block) => {
+      const cfg = block.config as { columns: ColumnDef[]; rows: RowData[] } | null;
+      return cfg?.columns?.length ? <DataTable columns={cfg.columns} rows={cfg.rows ?? []} /> : EMPTY_HINT;
+    },
+  },
+  "filter-toolbar": {
+    render: (block) => <StandaloneFilterToolbar config={block.config as { placeholder?: string; filters?: FilterDef[] } | null} />,
+  },
+  timeline: {
+    render: (block) => {
+      const steps = (block.config as TimelineStep[]) ?? [];
+      return steps.length ? <Timeline steps={steps} /> : EMPTY_HINT;
+    },
+  },
+  "bar-chart": {
+    render: (block) => {
+      const cfg = block.config as { data: Record<string, unknown>[]; categoryKey: string; series: BarSeries[] } | null;
+      return cfg?.data?.length ? <BarChart data={cfg.data} categoryKey={cfg.categoryKey} series={cfg.series ?? []} /> : EMPTY_HINT;
+    },
+  },
+  "funnel-chart": {
+    render: (block) => {
+      const steps = (block.config as FunnelStep[]) ?? [];
+      return steps.length ? <FunnelChart steps={steps} /> : EMPTY_HINT;
+    },
+  },
+  "week-strip": {
+    render: (block) => {
+      const weeks = (block.config as WeekChip[]) ?? [];
+      return weeks.length ? <StandaloneWeekStrip weeks={weeks} /> : EMPTY_HINT;
+    },
+  },
+  "detail-drawer": {
+    render: (block) => {
+      const data = block.config as DetailDrawerData | null;
+      // Sin `onClose`: agregado como bloque es una ficha fija, no un panel
+      // que se abre y se cierra desde una tabla.
+      return data ? <DetailDrawer data={data} sections={[]} /> : EMPTY_HINT;
+    },
+  },
+  "kanban-board": {
+    render: (block) => {
+      const cfg = block.config as { columns: KanbanColumn[]; cards: KanbanCard[] } | null;
+      return cfg?.columns?.length ? <StandaloneKanban columns={cfg.columns} cards={cfg.cards ?? []} /> : EMPTY_HINT;
     },
   },
   "relationship-graph": {

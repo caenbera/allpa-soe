@@ -4,8 +4,8 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, List, Plus, Star } from "lucide-react";
 import { PageShell, PageTabs } from "@/components/page-blocks/PageShell";
 import { BlockFrame } from "@/components/page-blocks/BlockFrame";
-import { AddBlockButton, AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
-import { BlockRenderer } from "@/components/page-blocks/BlockRenderer";
+import { AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
+import { useBlockComposer } from "@/components/page-blocks/use-block-composer";
 import { EmptyState, LoadingState } from "@/components/page-blocks/EmptyState";
 import { DonutChart } from "@/components/page-blocks/blocks/DonutChart";
 import { FilterToolbar } from "@/components/page-blocks/blocks/FilterToolbar";
@@ -75,11 +75,11 @@ export function CalendarioMaestroView() {
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [year, setYear] = useState(new Date().getFullYear());
-  const [createOpen, setCreateOpen] = useState(false);
 
   const episodes = useContent<Episode>(CONTENT_COLLECTIONS.episodes);
   const pillars = useContent<Pillar>(CONTENT_COLLECTIONS.pillars);
   const { blocks, addBlock, updateBlock, removeBlock } = usePageConfig("/contenido/calendario-maestro");
+  const composer = useBlockComposer(addBlock);
 
   const pillarOf = (id: string | null) => pillars.items.find((p) => p.id === id);
 
@@ -160,15 +160,6 @@ export function CalendarioMaestroView() {
         </>
       )}
 
-      {blocks.map((block) => (
-        <BlockRenderer
-          key={block.id}
-          block={block}
-          onUpdate={(patch) => updateBlock(block.id, patch)}
-          onDelete={() => removeBlock(block.id)}
-        />
-      ))}
-      <AddBlockButton onClick={() => setCreateOpen(true)} />
     </>
   );
 
@@ -179,6 +170,7 @@ export function CalendarioMaestroView() {
       icon="CalendarDays"
       starrable={false}
       sidePanel={sidePanel}
+      blocks={{ items: blocks, onUpdate: updateBlock, onDelete: removeBlock, onAdd: composer.openFor }}
       headerActions={
         <>
           <span className="flex items-center gap-1 rounded-lg border border-white/12 bg-white/[0.03] px-1">
@@ -283,7 +275,7 @@ export function CalendarioMaestroView() {
         </>
       )}
 
-      <AddBlockDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addBlock} />
+      <AddBlockDialog {...composer.dialogProps} />
     </PageShell>
   );
 }

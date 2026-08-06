@@ -4,8 +4,8 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, Plus } from "lucide-react";
 import { PageShell, PageTabs } from "@/components/page-blocks/PageShell";
-import { AddBlockButton, AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
-import { BlockRenderer } from "@/components/page-blocks/BlockRenderer";
+import { AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
+import { useBlockComposer } from "@/components/page-blocks/use-block-composer";
 import { BlockFrame } from "@/components/page-blocks/BlockFrame";
 import { EmptyState, LoadingState } from "@/components/page-blocks/EmptyState";
 import { KpiStrip } from "@/components/page-blocks/blocks/KpiStrip";
@@ -34,10 +34,10 @@ export function ContactosView() {
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
 
   const contacts = useContent<Contact>(CRM_COLLECTIONS.contacts);
   const { blocks, addBlock, updateBlock, removeBlock } = usePageConfig("/crm/contactos");
+  const composer = useBlockComposer(addBlock);
 
   const counts = useMemo(() => {
     const items = contacts.items;
@@ -156,15 +156,6 @@ export function ContactosView() {
         </BlockFrame>
       )}
 
-      {blocks.map((block) => (
-        <BlockRenderer
-          key={block.id}
-          block={block}
-          onUpdate={(patch) => updateBlock(block.id, patch)}
-          onDelete={() => removeBlock(block.id)}
-        />
-      ))}
-      <AddBlockButton onClick={() => setCreateOpen(true)} />
     </>
   );
 
@@ -175,6 +166,7 @@ export function ContactosView() {
       icon="UserRound"
       starrable={false}
       sidePanel={sidePanel}
+      blocks={{ items: blocks, onUpdate: updateBlock, onDelete: removeBlock, onAdd: composer.openFor }}
       headerActions={
         <>
           <Button variant="outline" size="sm" className="border-white/12 bg-white/[0.03] text-white/70 hover:bg-white/[0.06]">
@@ -254,7 +246,7 @@ export function ContactosView() {
         </>
       )}
 
-      <AddBlockDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addBlock} />
+      <AddBlockDialog {...composer.dialogProps} />
     </PageShell>
   );
 }

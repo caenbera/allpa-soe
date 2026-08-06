@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, ChevronDown, LayoutGrid, List, Plus, Search } from "lucide-react";
 import { PageShell, PageTabs } from "@/components/page-blocks/PageShell";
 import { BlockFrame } from "@/components/page-blocks/BlockFrame";
-import { AddBlockButton, AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
-import { BlockRenderer } from "@/components/page-blocks/BlockRenderer";
+import { AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
+import { useBlockComposer } from "@/components/page-blocks/use-block-composer";
 import { EmptyState, LoadingState } from "@/components/page-blocks/EmptyState";
 import { KpiStrip } from "@/components/page-blocks/blocks/KpiStrip";
 import { WeekStrip } from "@/components/page-blocks/blocks/WeekStrip";
@@ -68,11 +68,11 @@ export function CentroContenidoView() {
   const [search, setSearch] = useState("");
   const [activeWeek, setActiveWeek] = useState(12);
   const [view, setView] = useState<"semanal" | "lista">("semanal");
-  const [createOpen, setCreateOpen] = useState(false);
 
   const episodes = useContent<Episode>(CONTENT_COLLECTIONS.episodes);
   const pillars = useContent<Pillar>(CONTENT_COLLECTIONS.pillars);
   const { blocks, addBlock, updateBlock, removeBlock } = usePageConfig("/contenido/centro-de-contenido");
+  const composer = useBlockComposer(addBlock);
 
   const byWeek = useMemo(() => {
     const map = new Map<number, Episode>();
@@ -223,15 +223,6 @@ export function CentroContenidoView() {
         </>
       )}
 
-      {blocks.map((block) => (
-        <BlockRenderer
-          key={block.id}
-          block={block}
-          onUpdate={(patch) => updateBlock(block.id, patch)}
-          onDelete={() => removeBlock(block.id)}
-        />
-      ))}
-      <AddBlockButton onClick={() => setCreateOpen(true)} />
     </>
   );
 
@@ -242,6 +233,7 @@ export function CentroContenidoView() {
       icon="Clapperboard"
       starrable={false}
       sidePanel={sidePanel}
+      blocks={{ items: blocks, onUpdate: updateBlock, onDelete: removeBlock, onAdd: composer.openFor }}
       headerActions={
         <>
           <DropdownMenu>
@@ -398,7 +390,7 @@ export function CentroContenidoView() {
         </>
       )}
 
-      <AddBlockDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addBlock} />
+      <AddBlockDialog {...composer.dialogProps} />
     </PageShell>
   );
 }

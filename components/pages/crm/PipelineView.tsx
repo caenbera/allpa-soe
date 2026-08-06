@@ -5,8 +5,8 @@ import { Download, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { PageShell, PageTabs } from "@/components/page-blocks/PageShell";
 import { BlockFrame } from "@/components/page-blocks/BlockFrame";
-import { AddBlockButton, AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
-import { BlockRenderer } from "@/components/page-blocks/BlockRenderer";
+import { AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
+import { useBlockComposer } from "@/components/page-blocks/use-block-composer";
 import { EmptyState, LoadingState } from "@/components/page-blocks/EmptyState";
 import { KpiStrip } from "@/components/page-blocks/blocks/KpiStrip";
 import { FilterToolbar } from "@/components/page-blocks/blocks/FilterToolbar";
@@ -31,11 +31,11 @@ export function PipelineView() {
   const [tab, setTab] = useState("pipeline");
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<Record<string, string>>({});
-  const [createOpen, setCreateOpen] = useState(false);
 
   const deals = useContent<Deal>(CRM_COLLECTIONS.deals);
   const activities = useContent<Activity>(CRM_COLLECTIONS.activities);
   const { blocks, addBlock, updateBlock, removeBlock } = usePageConfig("/crm/pipeline");
+  const composer = useBlockComposer(addBlock);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -116,15 +116,6 @@ export function PipelineView() {
         </>
       )}
 
-      {blocks.map((block) => (
-        <BlockRenderer
-          key={block.id}
-          block={block}
-          onUpdate={(patch) => updateBlock(block.id, patch)}
-          onDelete={() => removeBlock(block.id)}
-        />
-      ))}
-      <AddBlockButton onClick={() => setCreateOpen(true)} />
     </>
   );
 
@@ -135,6 +126,7 @@ export function PipelineView() {
       icon="BarChart3"
       starrable={false}
       sidePanel={sidePanel}
+      blocks={{ items: blocks, onUpdate: updateBlock, onDelete: removeBlock, onAdd: composer.openFor }}
       headerActions={
         <>
           <Button variant="outline" size="sm" className="border-white/12 bg-white/[0.03] text-white/70 hover:bg-white/[0.06]">
@@ -235,7 +227,7 @@ export function PipelineView() {
         </>
       )}
 
-      <AddBlockDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addBlock} />
+      <AddBlockDialog {...composer.dialogProps} />
     </PageShell>
   );
 }

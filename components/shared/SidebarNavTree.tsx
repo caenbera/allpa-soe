@@ -48,8 +48,11 @@ function NavLeaf({ node, depth }: { node: NavNode; depth: number }) {
   );
 }
 
-function NavGroup({ node, depth, activeTrail }: { node: NavNode; depth: number; activeTrail: string[] }) {
-  const [open, setOpen] = useState(activeTrail.includes(node.key));
+function NavGroup({ node, depth }: { node: NavNode; depth: number }) {
+  // Todos los desplegables arrancan cerrados, también el del módulo en el que
+  // estás: el menú es largo y se prefiere entrar a una lista corta y abrir lo
+  // que haga falta, antes que encontrarla ya desplegada.
+  const [open, setOpen] = useState(false);
   const Icon = depth === 0 ? resolveLucideIcon(node.icon) : null;
 
   return (
@@ -74,7 +77,7 @@ function NavGroup({ node, depth, activeTrail }: { node: NavNode; depth: number; 
       {open && (
         <div className="mt-0.5 space-y-0.5">
           {node.children.map((child) => (
-            <NavNodeRenderer key={child.key} node={child} depth={depth + 1} activeTrail={activeTrail} />
+            <NavNodeRenderer key={child.key} node={child} depth={depth + 1} />
           ))}
         </div>
       )}
@@ -82,9 +85,9 @@ function NavGroup({ node, depth, activeTrail }: { node: NavNode; depth: number; 
   );
 }
 
-export function NavNodeRenderer({ node, depth, activeTrail }: { node: NavNode; depth: number; activeTrail: string[] }) {
+export function NavNodeRenderer({ node, depth }: { node: NavNode; depth: number }) {
   if (node.children.length > 0) {
-    return <NavGroup node={node} depth={depth} activeTrail={activeTrail} />;
+    return <NavGroup node={node} depth={depth} />;
   }
   return <NavLeaf node={node} depth={depth} />;
 }

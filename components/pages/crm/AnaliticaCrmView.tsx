@@ -3,8 +3,8 @@
 import { useMemo, useState } from "react";
 import { Download, Info } from "lucide-react";
 import { PageShell, PageTabs } from "@/components/page-blocks/PageShell";
-import { AddBlockButton, AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
-import { BlockRenderer } from "@/components/page-blocks/BlockRenderer";
+import { AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
+import { useBlockComposer } from "@/components/page-blocks/use-block-composer";
 import { BlockFrame } from "@/components/page-blocks/BlockFrame";
 import { EmptyState, LoadingState } from "@/components/page-blocks/EmptyState";
 import { KpiStrip, type KpiItem } from "@/components/page-blocks/blocks/KpiStrip";
@@ -71,7 +71,6 @@ const SLICE_COLUMNS = [
 
 export function AnaliticaCrmView() {
   const [tab, setTab] = useState("resumen");
-  const [createOpen, setCreateOpen] = useState(false);
 
   const contacts = useContent<Contact>(CRM_COLLECTIONS.contacts);
   const accounts = useContent<CrmAccount>(CRM_COLLECTIONS.accounts);
@@ -80,6 +79,7 @@ export function AnaliticaCrmView() {
   const activities = useContent<Activity>(CRM_COLLECTIONS.activities);
 
   const { blocks, addBlock, updateBlock, removeBlock } = usePageConfig("/crm/analitica-crm");
+  const composer = useBlockComposer(addBlock);
 
   const loading =
     contacts.loading || accounts.loading || families.loading || deals.loading || activities.loading;
@@ -343,15 +343,6 @@ export function AnaliticaCrmView() {
         </BlockFrame>
       )}
 
-      {blocks.map((block) => (
-        <BlockRenderer
-          key={block.id}
-          block={block}
-          onUpdate={(patch) => updateBlock(block.id, patch)}
-          onDelete={() => removeBlock(block.id)}
-        />
-      ))}
-      <AddBlockButton onClick={() => setCreateOpen(true)} />
     </>
   );
 
@@ -362,6 +353,7 @@ export function AnaliticaCrmView() {
       icon="LineChart"
       starrable={false}
       sidePanel={sidePanel}
+      blocks={{ items: blocks, onUpdate: updateBlock, onDelete: removeBlock, onAdd: composer.openFor }}
       headerActions={
         <Button variant="outline" size="sm" className="border-white/12 bg-white/[0.03] text-white/70 hover:bg-white/[0.06]">
           <Download className="mr-1.5 h-3.5 w-3.5" />
@@ -677,7 +669,7 @@ export function AnaliticaCrmView() {
         </>
       )}
 
-      <AddBlockDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addBlock} />
+      <AddBlockDialog {...composer.dialogProps} />
     </PageShell>
   );
 }

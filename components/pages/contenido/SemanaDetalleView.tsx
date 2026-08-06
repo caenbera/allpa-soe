@@ -4,8 +4,8 @@ import { useMemo, useState } from "react";
 import { ArrowLeft, Check, Plus } from "lucide-react";
 import { PageShell, PageTabs } from "@/components/page-blocks/PageShell";
 import { BlockFrame } from "@/components/page-blocks/BlockFrame";
-import { AddBlockButton, AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
-import { BlockRenderer } from "@/components/page-blocks/BlockRenderer";
+import { AddBlockDialog } from "@/components/page-blocks/AddBlockDialog";
+import { useBlockComposer } from "@/components/page-blocks/use-block-composer";
 import { EmptyState, LoadingState } from "@/components/page-blocks/EmptyState";
 import { MetaBar } from "@/components/page-blocks/MetaBar";
 import { DonutChart } from "@/components/page-blocks/blocks/DonutChart";
@@ -47,7 +47,6 @@ function NotYet({ what }: { what: string }) {
  */
 export function SemanaDetalleView({ week }: { week?: number }) {
   const [tab, setTab] = useState("resumen");
-  const [createOpen, setCreateOpen] = useState(false);
 
   const episodes = useContent<Episode>(CONTENT_COLLECTIONS.episodes);
   const pillars = useContent<Pillar>(CONTENT_COLLECTIONS.pillars);
@@ -60,6 +59,7 @@ export function SemanaDetalleView({ week }: { week?: number }) {
       { id: "prioridad", value: "media" },
     ]
   );
+  const composer = useBlockComposer(addBlock);
 
   /**
    * La semana pedida en la ruta; si no se indica ninguna, la que tenga
@@ -79,20 +79,6 @@ export function SemanaDetalleView({ week }: { week?: number }) {
   const pillar = pillars.items.find((p) => p.id === episode?.pillarId);
 
   const loading = episodes.loading || pillars.loading;
-
-  const extraBlocks = (
-    <>
-      {blocks.map((block) => (
-        <BlockRenderer
-          key={block.id}
-          block={block}
-          onUpdate={(patch) => updateBlock(block.id, patch)}
-          onDelete={() => removeBlock(block.id)}
-        />
-      ))}
-      <AddBlockButton onClick={() => setCreateOpen(true)} />
-    </>
-  );
 
   if (loading) {
     return (
@@ -119,7 +105,7 @@ export function SemanaDetalleView({ week }: { week?: number }) {
             description="Cada semana del plan reúne un episodio madre y los activos que nacen de él. Créalo desde el Calendario Maestro para empezar a trabajarla."
           />
         </div>
-        <AddBlockDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addBlock} />
+        <AddBlockDialog {...composer.dialogProps} />
       </PageShell>
     );
   }
@@ -147,7 +133,6 @@ export function SemanaDetalleView({ week }: { week?: number }) {
         {detail?.resources?.length ? <FileList files={detail.resources} /> : <NotYet what="recursos" />}
       </BlockFrame>
 
-      {extraBlocks}
     </>
   );
 
@@ -157,6 +142,7 @@ export function SemanaDetalleView({ week }: { week?: number }) {
       description={detail?.description ?? episode.subtitle}
       status="en_progreso"
       sidePanel={tab === "resumen" ? sidePanel : undefined}
+      blocks={{ items: blocks, onUpdate: updateBlock, onDelete: removeBlock, onAdd: composer.openFor }}
       headerActions={
         <>
           <Button variant="outline" size="sm" className="border-white/12 bg-white/[0.03] text-white/70 hover:bg-white/[0.06]">
@@ -294,7 +280,6 @@ export function SemanaDetalleView({ week }: { week?: number }) {
               )}
             </BlockFrame>
 
-            {extraBlocks}
           </div>
 
           <div className="space-y-3">
@@ -343,7 +328,6 @@ export function SemanaDetalleView({ week }: { week?: number }) {
               </button>
             </BlockFrame>
 
-            {extraBlocks}
           </div>
 
           <div className="space-y-3">
@@ -375,7 +359,6 @@ export function SemanaDetalleView({ week }: { week?: number }) {
               {detail?.documents?.length ? <FileList files={detail.documents} downloadable /> : <NotYet what="documentos" />}
             </BlockFrame>
 
-            {extraBlocks}
           </div>
 
           <div className="space-y-3">
@@ -398,7 +381,6 @@ export function SemanaDetalleView({ week }: { week?: number }) {
                 página de Academia.
               </p>
             </BlockFrame>
-            {extraBlocks}
           </div>
 
           <div className="space-y-3">
@@ -417,7 +399,7 @@ export function SemanaDetalleView({ week }: { week?: number }) {
         </BlockFrame>
       )}
 
-      <AddBlockDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={addBlock} />
+      <AddBlockDialog {...composer.dialogProps} />
     </PageShell>
   );
 }

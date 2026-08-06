@@ -28,6 +28,11 @@ import { OperacionesDashboardView } from "@/components/pages/operaciones/Dashboa
 import { TareasView } from "@/components/pages/operaciones/TareasView";
 import { ImplementacionesView } from "@/components/pages/operaciones/ImplementacionesView";
 import { ChecklistsView } from "@/components/pages/operaciones/ChecklistsView";
+import { RevisionesView } from "@/components/pages/operaciones/RevisionesView";
+import { DocumentosPendientesView } from "@/components/pages/operaciones/DocumentosPendientesView";
+import { FirmasView } from "@/components/pages/operaciones/FirmasView";
+import { RenovacionesView } from "@/components/pages/operaciones/RenovacionesView";
+import { CasosEspecialesView } from "@/components/pages/operaciones/CasosEspecialesView";
 
 /** Mapa ruta → componente para las páginas internas ya construidas. */
 export const pageRegistry: Record<string, ComponentType> = {
@@ -61,6 +66,11 @@ export const pageRegistry: Record<string, ComponentType> = {
   "/operaciones/tareas": TareasView,
   "/operaciones/implementaciones": ImplementacionesView,
   "/operaciones/checklists": ChecklistsView,
+  "/operaciones/revisiones": RevisionesView,
+  "/operaciones/documentos-pendientes": DocumentosPendientesView,
+  "/operaciones/firmas": FirmasView,
+  "/operaciones/renovaciones": RenovacionesView,
+  "/operaciones/casos-especiales": CasosEspecialesView,
 };
 
 /**

@@ -12,6 +12,9 @@ import { BarChart, FunnelChart, type BarSeries, type FunnelStep } from "@/compon
 import { WeekStrip, type WeekChip } from "@/components/page-blocks/blocks/WeekStrip";
 import { DetailDrawer, type DetailDrawerData } from "@/components/page-blocks/blocks/DetailDrawer";
 import { KanbanBoard, type KanbanCard, type KanbanColumn } from "@/components/page-blocks/blocks/KanbanBoard";
+import { AgendaList, type AgendaEntry } from "@/components/page-blocks/blocks/AgendaList";
+import { QuickActionGrid, type QuickAction } from "@/components/page-blocks/blocks/QuickActionGrid";
+import { MetricDeltaList, type MetricDeltaRow } from "@/components/page-blocks/blocks/MetricDeltaList";
 import { KpiStrip, type KpiItem } from "@/components/page-blocks/blocks/KpiStrip";
 import { DonutChart, type DonutSlice } from "@/components/page-blocks/blocks/DonutChart";
 import { InfoCard, type InfoRow } from "@/components/page-blocks/blocks/InfoCard";
@@ -229,6 +232,24 @@ export const blockRegistry: Record<BlockType, BlockRegistryEntry> = {
       ) : (
         EMPTY_HINT
       );
+    },
+  },
+  "agenda-list": {
+    render: (block) => {
+      const entries = (block.config as AgendaEntry[]) ?? [];
+      return entries.length ? <AgendaList entries={entries} /> : EMPTY_HINT;
+    },
+  },
+  "quick-actions": {
+    render: (block) => {
+      const actions = (block.config as QuickAction[]) ?? [];
+      return actions.length ? <QuickActionGrid actions={actions} /> : EMPTY_HINT;
+    },
+  },
+  "metric-delta": {
+    render: (block) => {
+      const rows = (block.config as MetricDeltaRow[]) ?? [];
+      return rows.length ? <MetricDeltaList rows={rows} /> : EMPTY_HINT;
     },
   },
   "data-table": {

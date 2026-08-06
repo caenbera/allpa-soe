@@ -3,6 +3,7 @@ import { db } from "@/lib/firebase";
 import { CONTENT_COLLECTIONS } from "@/lib/content-types";
 import type { Episode, Pillar } from "@/lib/content-types";
 import { CRM_COLLECTIONS } from "@/lib/crm-types";
+import { OPS_COLLECTIONS } from "@/lib/ops-types";
 
 /**
  * Versión actual del contenido de demostración. Al subirla, las empresas ya
@@ -14,8 +15,9 @@ import { CRM_COLLECTIONS } from "@/lib/crm-types";
  * 4 → módulo CRM: empresas y familias.
  * 5 → módulo CRM: nodos y aristas del grafo de relaciones.
  * 6 → módulo CRM: más actividades, para que cada pestaña tenga contenido.
+ * 7 → módulo Operaciones completo.
  */
-const DEMO_SEED_VERSION = 6;
+const DEMO_SEED_VERSION = 7;
 
 /**
  * Siembra el contenido de demostración en la empresa del super administrador,
@@ -55,8 +57,37 @@ export async function seedDemoContent(companyId: string): Promise<boolean> {
   // La versión 6 solo añade actividades a quien ya tenía la tanda corta.
   if (currentVersion < 6) await topUpCrmActivities(companyId);
 
+  // El módulo Operaciones llegó en la versión 7.
+  if (currentVersion < 7) await seedOps(companyId);
+
   await updateDoc(companyRef, { demoSeedVersion: DEMO_SEED_VERSION, demoSeeded: true });
   return true;
+}
+
+/** Siembra Operaciones solo si sus colecciones están vacías, para no duplicar. */
+async function seedOps(companyId: string) {
+  const existing = await getDocs(collection(db, "companies", companyId, OPS_COLLECTIONS.implementations));
+  if (!existing.empty) return;
+
+  const demo = await import("@/lib/demo-ops");
+  const batch = writeBatch(db);
+
+  const write = (name: string, rows: object[]) => {
+    rows.forEach((row) => batch.set(doc(collection(db, "companies", companyId, name)), row));
+  };
+
+  write(OPS_COLLECTIONS.implementations, demo.DEMO_IMPLEMENTATIONS);
+  write(OPS_COLLECTIONS.tasks, demo.DEMO_TASKS);
+  write(OPS_COLLECTIONS.reviews, demo.DEMO_REVIEWS);
+  write(OPS_COLLECTIONS.documents, demo.DEMO_DOCUMENTS);
+  write(OPS_COLLECTIONS.signatures, demo.DEMO_SIGNATURES);
+  write(OPS_COLLECTIONS.renewals, demo.DEMO_RENEWALS);
+  write(OPS_COLLECTIONS.specialCases, demo.DEMO_SPECIAL_CASES);
+  write(OPS_COLLECTIONS.events, demo.DEMO_EVENTS);
+  write(OPS_COLLECTIONS.team, demo.DEMO_TEAM);
+  write(OPS_COLLECTIONS.slaPolicies, demo.DEMO_SLA_POLICIES);
+
+  await batch.commit();
 }
 
 /**

@@ -48,7 +48,10 @@ export type BlockType =
   | "kanban-board"
   | "relationship-graph"
   | "org-chart"
-  | "family-tree";
+  | "family-tree"
+  | "agenda-list"
+  | "quick-actions"
+  | "metric-delta";
 
 /** Dónde se pinta un bloque dentro de la página. */
 export type BlockPlacement = "main" | "side";
@@ -110,6 +113,7 @@ export const BLOCK_TYPE_CATALOG: BlockTypeDef[] = [
   { type: "funnel-chart", label: "Embudo", description: "Etapas de conversión.", icon: "Filter", category: "graficos" },
   { type: "ranked-bars", label: "Ranking con barras", description: "Comparativa ordenada de mayor a menor.", icon: "BarChart3", category: "graficos" },
   { type: "insight-list", label: "Hallazgos", description: "Conclusiones en lenguaje llano.", icon: "Lightbulb", category: "graficos" },
+  { type: "metric-delta", label: "Métricas con variación", description: "Valor por fila y hacia dónde se mueve.", icon: "ArrowUpDown", category: "graficos" },
 
   // Datos y listas
   { type: "data-table", label: "Tabla de datos", description: "Listado ordenable con filtros y paginación.", icon: "Table", category: "datos" },
@@ -124,6 +128,7 @@ export const BLOCK_TYPE_CATALOG: BlockTypeDef[] = [
   { type: "checklist-panel", label: "Checklist", description: "Lista de verificación con progreso.", icon: "CheckSquare", category: "contenido" },
   { type: "info-card", label: "Ficha de información", description: "Lista de campos y valores.", icon: "ClipboardList", category: "contenido" },
   { type: "media-preview", label: "Vista previa multimedia", description: "Video o audio con reproductor.", icon: "PlayCircle", category: "contenido" },
+  { type: "quick-actions", label: "Acciones rápidas", description: "Rejilla de atajos con icono y etiqueta.", icon: "Zap", category: "contenido" },
   { type: "tag-cloud", label: "Etiquetas", description: "Chips de colores que se agregan y quitan.", icon: "Tags", category: "contenido" },
 
   // Personas y fichas
@@ -139,6 +144,7 @@ export const BLOCK_TYPE_CATALOG: BlockTypeDef[] = [
   { type: "week-cards", label: "Tarjetas de semana", description: "Semanas con invitado, estado y activos generados.", icon: "CalendarDays", category: "planificacion" },
   { type: "pillar-cards", label: "Tarjetas de pilar", description: "Pilares estratégicos con sus temas y avance.", icon: "Target", category: "planificacion" },
   { type: "upcoming-episodes", label: "Próximos episodios", description: "Las siguientes semanas del plan.", icon: "CalendarClock", category: "planificacion" },
+  { type: "agenda-list", label: "Agenda del día", description: "Acciones por hora, con prioridad y responsable.", icon: "ListChecks", category: "planificacion" },
 
   // Relaciones
   { type: "relationship-graph", label: "Grafo de relaciones", description: "Personas, empresas y productos conectados.", icon: "Workflow", category: "relaciones" },

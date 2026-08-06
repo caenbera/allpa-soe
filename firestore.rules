@@ -160,6 +160,48 @@ service cloud.firestore {
         allow write: if isCompanyMember(companyId);
       }
 
+      // Módulo Operaciones. Mismo aislamiento por empresa que las anteriores.
+      match /opsImplementations/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /opsTasks/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /opsReviews/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /opsDocuments/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /opsSignatures/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /opsRenewals/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /opsSpecialCases/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /opsEvents/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /opsTeam/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /opsSlaPolicies/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+
       // Personalización de cada página: características visibles y bloques
       // agregados por el administrador.
       match /pageConfig/{pageKey} {

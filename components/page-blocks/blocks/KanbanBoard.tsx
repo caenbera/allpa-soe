@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { resolveLucideIcon } from "@/lib/lucide-icon";
 import { ScoreRing } from "@/components/page-blocks/blocks/ScoreRing";
+import type { BadgeTone } from "@/components/page-blocks/blocks/DataTable";
 
 export interface KanbanColumn {
   id: string;
@@ -11,20 +12,54 @@ export interface KanbanColumn {
   color: string;
 }
 
+/**
+ * Tarjeta del tablero.
+ *
+ * Solo `id`, `columnId` y `title` son obligatorios: el resto son piezas que se
+ * pintan si vienen. Así el mismo tablero sirve para una oportunidad del CRM
+ * —con su anillo de puntaje y su importe— y para una tarea de Operaciones
+ * —con prioridad, responsable y barra de avance—, sin duplicar la lógica de
+ * arrastre, que es la parte delicada.
+ */
 export interface KanbanCard {
   id: string;
   columnId: string;
   title: string;
-  sourceChannel: string;
-  sourceDetail: string;
-  sourceIcon: string;
-  headline: string;
-  tag: string;
-  score: number;
-  value: number;
-  valueLabel: string;
-  timeLabel: string;
+  /** Momento o vencimiento: "Hoy", "hace 2 horas", "21 may". */
+  timeLabel?: string;
+  /** Se pinta en ámbar cuando la fecha ya pasó. */
+  overdue?: boolean;
+  /** Etiqueta principal: interés, proceso… */
+  tag?: string;
+  tagTone?: BadgeTone;
+
+  // Origen del registro (CRM)
+  sourceChannel?: string;
+  sourceDetail?: string;
+  sourceIcon?: string;
+  headline?: string;
+
+  // Valor comercial (CRM)
+  score?: number;
+  value?: number;
+  valueLabel?: string;
   nextAction?: string;
+
+  // Trabajo en curso (Operaciones)
+  /** Cliente o cuenta a la que pertenece la tarjeta. */
+  subtitle?: string;
+  /** Persona responsable; se muestra con su avatar de iniciales. */
+  owner?: string;
+  priority?: string;
+  priorityTone?: BadgeTone;
+  /** 0-100. */
+  progress?: number;
+  /** Pie de la barra: "Paso 6 de 10", "Subtarea 3 de 5". */
+  progressLabel?: string;
+  /** Motivo por el que la tarjeta está detenida: "Cliente", "Documentos". */
+  waitingOn?: string;
+  /** Nota bajo el título en las tarjetas ya cerradas. */
+  footnote?: string;
 }
 
 function initialsOf(name: string) {
@@ -38,6 +73,16 @@ function initialsOf(name: string) {
 }
 
 const money = (n: number) => `$${n.toLocaleString("es")}`;
+
+const TONES: Record<BadgeTone, string> = {
+  gold: "bg-[var(--allpa-gold-400)]/12 text-[var(--allpa-gold-300)]",
+  emerald: "bg-emerald-400/12 text-emerald-300",
+  amber: "bg-amber-400/12 text-amber-300",
+  blue: "bg-blue-400/12 text-blue-300",
+  violet: "bg-violet-400/12 text-violet-300",
+  rose: "bg-rose-400/12 text-rose-300",
+  neutral: "bg-white/8 text-white/60",
+};
 
 /**
  * Tablero por etapas con tarjetas arrastrables.
@@ -77,7 +122,7 @@ export function KanbanBoard({
       <div className="flex min-w-max gap-3">
         {columns.map((column) => {
           const columnCards = cards.filter((c) => c.columnId === column.id);
-          const total = columnCards.reduce((sum, c) => sum + c.value, 0);
+          const total = columnCards.reduce((sum, c) => sum + (c.value ?? 0), 0);
           const isOver = overColumn === column.id;
 
           return (
@@ -94,16 +139,18 @@ export function KanbanBoard({
               }`}
             >
               <header className="rounded-t-xl border-b border-white/[0.06] px-3 py-2.5" style={{ borderTop: `2px solid ${column.color}` }}>
-                <p className="truncate text-sm font-semibold text-[#f3ecd9]">{column.name}</p>
-                <p className="mt-0.5 flex items-center gap-2 text-[11px] text-white/40">
-                  <span>{columnCards.length} leads</span>
-                  <span className="tabular-nums">{money(total)}</span>
+                <p className="flex items-center gap-2 text-sm font-semibold text-[#f3ecd9]">
+                  <span className="min-w-0 flex-1 truncate">{column.name}</span>
+                  <span className="flex-shrink-0 text-xs font-normal text-white/40">{columnCards.length}</span>
                 </p>
+                {total > 0 && (
+                  <p className="mt-0.5 text-[11px] tabular-nums text-white/40">{money(total)}</p>
+                )}
               </header>
 
               <div className="flex-1 space-y-2 p-2">
                 {columnCards.map((card) => {
-                  const SourceIcon = resolveLucideIcon(card.sourceIcon);
+                  const SourceIcon = card.sourceIcon ? resolveLucideIcon(card.sourceIcon) : null;
                   return (
                     <article
                       key={card.id}
@@ -128,28 +175,72 @@ export function KanbanBoard({
                         <span className="min-w-0 truncate text-sm font-medium text-white/90">{card.title}</span>
                       </div>
 
-                      <p className="mb-1.5 flex items-center gap-1.5 text-[11px] text-white/40">
-                        <SourceIcon className="h-3 w-3 flex-shrink-0" />
-                        <span className="truncate">
-                          {card.sourceChannel} · {card.sourceDetail}
-                        </span>
-                      </p>
-
-                      <p className="mb-2 line-clamp-2 text-xs leading-snug text-white/60">{card.headline}</p>
-
-                      {card.tag && (
-                        <span className="mb-2 inline-block rounded-full bg-[var(--allpa-gold-400)]/12 px-2 py-0.5 text-[10px] text-[var(--allpa-gold-300)]">
-                          {card.tag}
-                        </span>
+                      {SourceIcon && (
+                        <p className="mb-1.5 flex items-center gap-1.5 text-[11px] text-white/40">
+                          <SourceIcon className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">
+                            {[card.sourceChannel, card.sourceDetail].filter(Boolean).join(" · ")}
+                          </span>
+                        </p>
                       )}
 
-                      <div className="flex items-center gap-2 border-t border-white/[0.06] pt-2">
-                        <ScoreRing value={card.score} size={28} />
-                        <span className="min-w-0">
-                          <span className="block text-[10px] text-white/35">{card.valueLabel}</span>
-                          <span className="block truncate text-xs font-medium tabular-nums text-white/85">{money(card.value)}</span>
-                        </span>
-                      </div>
+                      {card.subtitle && <p className="mb-1.5 truncate text-[11px] text-white/45">{card.subtitle}</p>}
+
+                      {card.headline && <p className="mb-2 line-clamp-2 text-xs leading-snug text-white/60">{card.headline}</p>}
+
+                      {(card.tag || card.priority) && (
+                        <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                          {card.tag && (
+                            <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] ${TONES[card.tagTone ?? "gold"]}`}>
+                              {card.tag}
+                            </span>
+                          )}
+                          {card.priority && (
+                            <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${TONES[card.priorityTone ?? "neutral"]}`}>
+                              {card.priority}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {card.waitingOn && (
+                        <p className="mb-2 inline-block rounded-md bg-amber-400/10 px-2 py-0.5 text-[10px] text-amber-300">
+                          En espera: {card.waitingOn}
+                        </p>
+                      )}
+
+                      {card.owner && (
+                        <p className="mb-2 flex items-center gap-1.5 text-[11px] text-white/55">
+                          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-[9px] font-bold text-white/70">
+                            {initialsOf(card.owner)}
+                          </span>
+                          <span className="truncate">{card.owner}</span>
+                        </p>
+                      )}
+
+                      {card.progress !== undefined && (
+                        <div className="mb-2">
+                          <div className="h-1 w-full overflow-hidden rounded-full bg-white/8">
+                            <div className="h-full rounded-full bg-[var(--allpa-gold-400)]" style={{ width: `${card.progress}%` }} />
+                          </div>
+                          <p className="mt-1 flex items-center justify-between text-[10px] text-white/35">
+                            <span className="tabular-nums">{card.progress}%</span>
+                            {card.progressLabel && <span className="truncate">{card.progressLabel}</span>}
+                          </p>
+                        </div>
+                      )}
+
+                      {card.score !== undefined && (
+                        <div className="flex items-center gap-2 border-t border-white/[0.06] pt-2">
+                          <ScoreRing value={card.score} size={28} />
+                          {card.value !== undefined && (
+                            <span className="min-w-0">
+                              <span className="block text-[10px] text-white/35">{card.valueLabel}</span>
+                              <span className="block truncate text-xs font-medium tabular-nums text-white/85">{money(card.value)}</span>
+                            </span>
+                          )}
+                        </div>
+                      )}
 
                       {card.nextAction && (
                         <p className="mt-2 text-[10px] text-white/40">
@@ -157,7 +248,13 @@ export function KanbanBoard({
                         </p>
                       )}
 
-                      <p className="mt-1.5 text-[10px] text-white/30">{card.timeLabel}</p>
+                      {card.footnote && <p className="mt-1.5 text-[10px] text-white/35">{card.footnote}</p>}
+
+                      {card.timeLabel && (
+                        <p className={`mt-1.5 text-[10px] ${card.overdue ? "font-medium text-amber-400" : "text-white/30"}`}>
+                          {card.timeLabel}
+                        </p>
+                      )}
                     </article>
                   );
                 })}

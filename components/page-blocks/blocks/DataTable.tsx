@@ -35,7 +35,12 @@ export type Cell =
   /** Punto de color + texto, ej. la última actividad. */
   | { kind: "activity"; value: string; sub?: string; color?: string }
   /** Varias etiquetas en una celda, ej. los productos principales de una empresa. */
-  | { kind: "badgeList"; items: { label: string; tone?: BadgeTone }[] };
+  | { kind: "badgeList"; items: { label: string; tone?: BadgeTone }[] }
+  /**
+   * Columna de tendencia: "6%", "-2 días", o vacío para "sin cambio".
+   * Con `lowerIsBetter` —tiempos de ciclo, de respuesta— bajar se pinta verde.
+   */
+  | { kind: "delta"; value: string; lowerIsBetter?: boolean };
 
 export type BadgeTone = "gold" | "emerald" | "amber" | "blue" | "violet" | "rose" | "neutral";
 
@@ -244,6 +249,17 @@ function CellView({ cell }: { cell: Cell | undefined }) {
           </span>
         </span>
       );
+    case "delta": {
+      const trimmed = cell.value.trim();
+      if (!trimmed) return <span className="text-white/25">—</span>;
+      const down = trimmed.startsWith("-") || trimmed.startsWith("↓");
+      const good = cell.lowerIsBetter ? down : !down;
+      return (
+        <span className={`text-xs font-medium ${good ? "text-emerald-400" : "text-rose-400"}`}>
+          {down ? "↓" : "↑"} {trimmed.replace(/^[-+↑↓]\s*/, "")}
+        </span>
+      );
+    }
     case "badgeList":
       return (
         <span className="flex flex-wrap items-center gap-1">

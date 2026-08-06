@@ -52,7 +52,10 @@ export type BlockType =
   | "agenda-list"
   | "quick-actions"
   | "metric-delta"
-  | "phase-checklist";
+  | "phase-checklist"
+  | "month-calendar"
+  | "time-grid-calendar"
+  | "mini-month";
 
 /** Dónde se pinta un bloque dentro de la página. */
 export type BlockPlacement = "main" | "side";
@@ -147,6 +150,9 @@ export const BLOCK_TYPE_CATALOG: BlockTypeDef[] = [
   { type: "upcoming-episodes", label: "Próximos episodios", description: "Las siguientes semanas del plan.", icon: "CalendarClock", category: "planificacion" },
   { type: "agenda-list", label: "Agenda del día", description: "Acciones por hora, con prioridad y responsable.", icon: "ListChecks", category: "planificacion" },
   { type: "phase-checklist", label: "Checklist por fases", description: "Fases numeradas con su progreso y sus pasos.", icon: "ListTree", category: "planificacion" },
+  { type: "month-calendar", label: "Calendario mensual", description: "Rejilla del mes con los eventos de cada día.", icon: "CalendarDays", category: "planificacion" },
+  { type: "time-grid-calendar", label: "Calendario por horas", description: "Rejilla horaria de un día o de la semana.", icon: "CalendarRange", category: "planificacion" },
+  { type: "mini-month", label: "Mes compacto", description: "Mes reducido para saltar de fecha.", icon: "CalendarCheck", category: "planificacion" },
 
   // Relaciones
   { type: "relationship-graph", label: "Grafo de relaciones", description: "Personas, empresas y productos conectados.", icon: "Workflow", category: "relaciones" },

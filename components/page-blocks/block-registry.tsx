@@ -16,6 +16,9 @@ import { AgendaList, type AgendaEntry } from "@/components/page-blocks/blocks/Ag
 import { QuickActionGrid, type QuickAction } from "@/components/page-blocks/blocks/QuickActionGrid";
 import { MetricDeltaList, type MetricDeltaRow } from "@/components/page-blocks/blocks/MetricDeltaList";
 import { PhaseChecklist, type ChecklistPhaseData } from "@/components/page-blocks/blocks/PhaseChecklist";
+import { MonthCalendar, type CalendarEvent } from "@/components/page-blocks/blocks/MonthCalendar";
+import { TimeGridCalendar } from "@/components/page-blocks/blocks/TimeGridCalendar";
+import { MiniMonth } from "@/components/page-blocks/blocks/MiniMonth";
 import { KpiStrip, type KpiItem } from "@/components/page-blocks/blocks/KpiStrip";
 import { DonutChart, type DonutSlice } from "@/components/page-blocks/blocks/DonutChart";
 import { InfoCard, type InfoRow } from "@/components/page-blocks/blocks/InfoCard";
@@ -245,6 +248,28 @@ export const blockRegistry: Record<BlockType, BlockRegistryEntry> = {
     render: (block) => {
       const actions = (block.config as QuickAction[]) ?? [];
       return actions.length ? <QuickActionGrid actions={actions} /> : EMPTY_HINT;
+    },
+  },
+  "month-calendar": {
+    render: (block) => {
+      const cfg = block.config as { year?: number; month?: number; events?: CalendarEvent[] } | null;
+      const hoy = new Date();
+      return <MonthCalendar year={cfg?.year ?? hoy.getFullYear()} month={cfg?.month ?? hoy.getMonth()} events={cfg?.events ?? []} />;
+    },
+  },
+  "time-grid-calendar": {
+    render: (block) => {
+      const cfg = block.config as { days?: string[]; events?: CalendarEvent[] } | null;
+      // Sin días configurados se muestra hoy.
+      const days = cfg?.days?.length ? cfg.days.map((d) => new Date(`${d}T12:00:00`)) : [new Date()];
+      return <TimeGridCalendar days={days} events={cfg?.events ?? []} />;
+    },
+  },
+  "mini-month": {
+    render: (block) => {
+      const cfg = block.config as { year?: number; month?: number } | null;
+      const hoy = new Date();
+      return <MiniMonth year={cfg?.year ?? hoy.getFullYear()} month={cfg?.month ?? hoy.getMonth()} />;
     },
   },
   "phase-checklist": {

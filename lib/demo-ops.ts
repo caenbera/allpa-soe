@@ -8,6 +8,7 @@
  * en el bundle de las páginas.
  */
 
+import { localIso } from "@/lib/calendar-utils";
 import type {
   ChecklistPhase,
   Implementation,
@@ -31,11 +32,17 @@ import type {
  */
 const HOY = new Date();
 
-/** `YYYY-MM-DD` a `n` días de hoy (negativo para el pasado). */
+/**
+ * `YYYY-MM-DD` a `n` días de hoy (negativo para el pasado).
+ *
+ * Usa la fecha **local**: con `toISOString()` una tarde en un huso al oeste de
+ * Greenwich se guardaría con el día siguiente y el evento caería en la casilla
+ * equivocada del calendario.
+ */
 function iso(offsetDays: number): string {
   const d = new Date(HOY);
   d.setDate(d.getDate() + offsetDays);
-  return d.toISOString().slice(0, 10);
+  return localIso(d);
 }
 
 /** Etiqueta corta que se muestra en las tarjetas: "Hoy", "Mañana", "23 may". */

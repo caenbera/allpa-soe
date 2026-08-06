@@ -129,8 +129,8 @@ export const defaultSidebarBlocks: DefaultBlockConfig[] = [
     icon: "Cog",
     pages: [
       { slug: "dashboard", name: "Dashboard", icon: "LayoutDashboard", built: true },
-      { slug: "implementaciones", name: "Implementaciones", icon: "Layers", built: false },
-      { slug: "checklists", name: "Checklists", icon: "ListChecks", built: false },
+      { slug: "implementaciones", name: "Implementaciones", icon: "Layers", built: true },
+      { slug: "checklists", name: "Checklists", icon: "ListChecks", built: true },
       { slug: "tareas", name: "Tareas", icon: "ClipboardList", built: true },
       { slug: "revisiones", name: "Revisiones", icon: "ClipboardCheck", built: false },
       { slug: "documentos-pendientes", name: "Documentos Pendientes", icon: "FileText", built: false },

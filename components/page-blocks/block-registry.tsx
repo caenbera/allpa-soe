@@ -15,6 +15,7 @@ import { KanbanBoard, type KanbanCard, type KanbanColumn } from "@/components/pa
 import { AgendaList, type AgendaEntry } from "@/components/page-blocks/blocks/AgendaList";
 import { QuickActionGrid, type QuickAction } from "@/components/page-blocks/blocks/QuickActionGrid";
 import { MetricDeltaList, type MetricDeltaRow } from "@/components/page-blocks/blocks/MetricDeltaList";
+import { PhaseChecklist, type ChecklistPhaseData } from "@/components/page-blocks/blocks/PhaseChecklist";
 import { KpiStrip, type KpiItem } from "@/components/page-blocks/blocks/KpiStrip";
 import { DonutChart, type DonutSlice } from "@/components/page-blocks/blocks/DonutChart";
 import { InfoCard, type InfoRow } from "@/components/page-blocks/blocks/InfoCard";
@@ -244,6 +245,12 @@ export const blockRegistry: Record<BlockType, BlockRegistryEntry> = {
     render: (block) => {
       const actions = (block.config as QuickAction[]) ?? [];
       return actions.length ? <QuickActionGrid actions={actions} /> : EMPTY_HINT;
+    },
+  },
+  "phase-checklist": {
+    render: (block) => {
+      const phases = (block.config as ChecklistPhaseData[]) ?? [];
+      return phases.length ? <PhaseChecklist phases={phases} /> : EMPTY_HINT;
     },
   },
   "metric-delta": {

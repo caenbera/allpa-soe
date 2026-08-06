@@ -26,6 +26,8 @@ import { AutomatizacionesView } from "@/components/pages/crm/AutomatizacionesVie
 import { AnaliticaCrmView } from "@/components/pages/crm/AnaliticaCrmView";
 import { OperacionesDashboardView } from "@/components/pages/operaciones/DashboardView";
 import { TareasView } from "@/components/pages/operaciones/TareasView";
+import { ImplementacionesView } from "@/components/pages/operaciones/ImplementacionesView";
+import { ChecklistsView } from "@/components/pages/operaciones/ChecklistsView";
 
 /** Mapa ruta → componente para las páginas internas ya construidas. */
 export const pageRegistry: Record<string, ComponentType> = {
@@ -57,6 +59,8 @@ export const pageRegistry: Record<string, ComponentType> = {
 
   "/operaciones/dashboard": OperacionesDashboardView,
   "/operaciones/tareas": TareasView,
+  "/operaciones/implementaciones": ImplementacionesView,
+  "/operaciones/checklists": ChecklistsView,
 };
 
 /**
@@ -71,6 +75,10 @@ const dynamicRoutes: { pattern: RegExp; render: (m: RegExpMatchArray) => React.R
   {
     pattern: /^\/crm\/contactos\/([A-Za-z0-9_-]+)$/,
     render: (m) => <ContactoPerfilView contactId={m[1]} />,
+  },
+  {
+    pattern: /^\/operaciones\/checklists\/([A-Za-z0-9_-]+)$/,
+    render: (m) => <ChecklistsView implementationId={m[1]} />,
   },
 ];
 
@@ -94,4 +102,9 @@ export function weekDetailPath(week: number) {
 /** Ruta del perfil de un contacto; la usan la tabla y el panel lateral. */
 export function contactProfilePath(contactId: string) {
   return `/crm/contactos/${contactId}`;
+}
+
+/** Ruta del checklist de una implementación concreta. */
+export function checklistPath(implementationId: string) {
+  return `/operaciones/checklists/${implementationId}`;
 }

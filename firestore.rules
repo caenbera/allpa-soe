@@ -206,6 +206,49 @@ service cloud.firestore {
         allow write: if isCompanyMember(companyId);
       }
 
+      // Módulo Soluciones: catálogo de planes patrimoniales, sus componentes,
+      // rutas de cliente, casos de uso, biblioteca y herramientas.
+      match /solSolutions/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /solComponents/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /solRoutes/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /solUseCases/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /solResources/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /solDocuments/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /solAssignments/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /solActivities/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /solSimulations/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+      match /solComparisons/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+
       // Personalización de cada página: características visibles y bloques
       // agregados por el administrador.
       match /pageConfig/{pageKey} {

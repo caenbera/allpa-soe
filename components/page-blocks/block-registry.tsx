@@ -20,6 +20,8 @@ import { MonthCalendar, type CalendarEvent } from "@/components/page-blocks/bloc
 import { TimeGridCalendar } from "@/components/page-blocks/blocks/TimeGridCalendar";
 import { MiniMonth } from "@/components/page-blocks/blocks/MiniMonth";
 import { SettingsCardGrid, type SettingsCard } from "@/components/page-blocks/blocks/SettingsCardGrid";
+import { SolutionCardGrid, type SolutionCardData } from "@/components/page-blocks/blocks/SolutionCardGrid";
+import { StepLadder, type LadderStep } from "@/components/page-blocks/blocks/StepLadder";
 import { KpiStrip, type KpiItem } from "@/components/page-blocks/blocks/KpiStrip";
 import { DonutChart, type DonutSlice } from "@/components/page-blocks/blocks/DonutChart";
 import { InfoCard, type InfoRow } from "@/components/page-blocks/blocks/InfoCard";
@@ -249,6 +251,18 @@ export const blockRegistry: Record<BlockType, BlockRegistryEntry> = {
     render: (block) => {
       const actions = (block.config as QuickAction[]) ?? [];
       return actions.length ? <QuickActionGrid actions={actions} /> : EMPTY_HINT;
+    },
+  },
+  "solution-cards": {
+    render: (block) => {
+      const solutions = (block.config as SolutionCardData[]) ?? [];
+      return solutions.length ? <SolutionCardGrid solutions={solutions} /> : EMPTY_HINT;
+    },
+  },
+  "step-ladder": {
+    render: (block) => {
+      const steps = (block.config as LadderStep[]) ?? [];
+      return steps.length ? <StepLadder steps={steps} showProgress /> : EMPTY_HINT;
     },
   },
   "settings-cards": {

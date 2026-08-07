@@ -56,7 +56,9 @@ export type BlockType =
   | "month-calendar"
   | "time-grid-calendar"
   | "mini-month"
-  | "settings-cards";
+  | "settings-cards"
+  | "solution-cards"
+  | "step-ladder";
 
 /** Dónde se pinta un bloque dentro de la página. */
 export type BlockPlacement = "main" | "side";
@@ -126,6 +128,7 @@ export const BLOCK_TYPE_CATALOG: BlockTypeDef[] = [
   { type: "kanban-board", label: "Tablero por etapas", description: "Tarjetas arrastrables entre columnas.", icon: "Columns3", category: "datos" },
   { type: "file-list", label: "Lista de archivos", description: "Documentos y recursos adjuntos.", icon: "FileText", category: "datos" },
   { type: "asset-progress", label: "Activos con progreso", description: "Tarjetas de activos y su avance.", icon: "Boxes", category: "datos" },
+  { type: "solution-cards", label: "Tarjetas de solución", description: "Plan con sus prestaciones, alcance y acceso.", icon: "LayoutGrid", category: "datos" },
 
   // Contenido y notas
   { type: "rich-text", label: "Texto enriquecido", description: "Bloque de redacción libre.", icon: "PenLine", category: "contenido" },
@@ -152,6 +155,7 @@ export const BLOCK_TYPE_CATALOG: BlockTypeDef[] = [
   { type: "upcoming-episodes", label: "Próximos episodios", description: "Las siguientes semanas del plan.", icon: "CalendarClock", category: "planificacion" },
   { type: "agenda-list", label: "Agenda del día", description: "Acciones por hora, con prioridad y responsable.", icon: "ListChecks", category: "planificacion" },
   { type: "phase-checklist", label: "Checklist por fases", description: "Fases numeradas con su progreso y sus pasos.", icon: "ListTree", category: "planificacion" },
+  { type: "step-ladder", label: "Pasos numerados", description: "Metodología paso a paso con el estado de cada uno.", icon: "ListOrdered", category: "planificacion" },
   { type: "month-calendar", label: "Calendario mensual", description: "Rejilla del mes con los eventos de cada día.", icon: "CalendarDays", category: "planificacion" },
   { type: "time-grid-calendar", label: "Calendario por horas", description: "Rejilla horaria de un día o de la semana.", icon: "CalendarRange", category: "planificacion" },
   { type: "mini-month", label: "Mes compacto", description: "Mes reducido para saltar de fecha.", icon: "CalendarCheck", category: "planificacion" },

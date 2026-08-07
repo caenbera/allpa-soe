@@ -13,9 +13,10 @@ import { db } from "@/lib/firebase";
 import type { ContentCollection } from "@/lib/content-types";
 import type { CrmCollection } from "@/lib/crm-types";
 import type { OpsCollection } from "@/lib/ops-types";
+import type { SolCollection } from "@/lib/solution-types";
 
-/** Cualquier subcolección de datos de una empresa: Contenido, CRM u Operaciones. */
-export type CompanyCollection = ContentCollection | CrmCollection | OpsCollection;
+/** Cualquier subcolección de datos de una empresa: Contenido, CRM, Operaciones o Soluciones. */
+export type CompanyCollection = ContentCollection | CrmCollection | OpsCollection | SolCollection;
 
 /**
  * CRUD genérico sobre las colecciones del módulo Contenido. Todas comparten

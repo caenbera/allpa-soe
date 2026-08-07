@@ -61,7 +61,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Las empresas de administradores normales arrancan vacías.
         if (role === "superadmin" && companyId) {
           const { seedDemoContent } = await import("@/lib/services/demo-seed");
-          seedDemoContent(companyId).catch(() => undefined);
+          // No debe tumbar el inicio de sesión, pero tampoco desaparecer sin
+          // dejar rastro: una siembra fallida se veía antes como una pantalla
+          // vacía sin explicación.
+          seedDemoContent(companyId).catch((err) => {
+            console.error("No se pudo sembrar el contenido de demostración:", err);
+          });
         }
       } else {
         setRole(null);

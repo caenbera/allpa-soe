@@ -4,6 +4,7 @@ import { CONTENT_COLLECTIONS } from "@/lib/content-types";
 import type { Episode, Pillar } from "@/lib/content-types";
 import { CRM_COLLECTIONS } from "@/lib/crm-types";
 import { OPS_COLLECTIONS } from "@/lib/ops-types";
+import { SOL_COLLECTIONS } from "@/lib/solution-types";
 
 /**
  * Versión actual del contenido de demostración. Al subirla, las empresas ya
@@ -17,8 +18,9 @@ import { OPS_COLLECTIONS } from "@/lib/ops-types";
  * 6 → módulo CRM: más actividades, para que cada pestaña tenga contenido.
  * 7 → módulo Operaciones completo.
  * 8 → módulo Operaciones: reportes guardados.
+ * 9 → módulo Soluciones completo.
  */
-const DEMO_SEED_VERSION = 8;
+const DEMO_SEED_VERSION = 9;
 
 /**
  * Siembra el contenido de demostración en la empresa del super administrador,
@@ -64,6 +66,9 @@ export async function seedDemoContent(companyId: string): Promise<boolean> {
   // Los reportes guardados llegaron en la versión 8.
   if (currentVersion < 8) await seedOpsSavedReports(companyId);
 
+  // El módulo Soluciones llegó en la versión 9.
+  if (currentVersion < 9) await seedSolutions(companyId);
+
   await updateDoc(companyRef, { demoSeedVersion: DEMO_SEED_VERSION, demoSeeded: true });
   return true;
 }
@@ -91,6 +96,32 @@ async function seedOps(companyId: string) {
   write(OPS_COLLECTIONS.team, demo.DEMO_TEAM);
   write(OPS_COLLECTIONS.slaPolicies, demo.DEMO_SLA_POLICIES);
   write(OPS_COLLECTIONS.savedReports, demo.DEMO_SAVED_REPORTS);
+
+  await batch.commit();
+}
+
+/** Siembra Soluciones solo si sus colecciones están vacías, para no duplicar. */
+async function seedSolutions(companyId: string) {
+  const existing = await getDocs(collection(db, "companies", companyId, SOL_COLLECTIONS.solutions));
+  if (!existing.empty) return;
+
+  const demo = await import("@/lib/demo-solutions");
+  const batch = writeBatch(db);
+
+  const write = (name: string, rows: object[]) => {
+    rows.forEach((row) => batch.set(doc(collection(db, "companies", companyId, name)), row));
+  };
+
+  write(SOL_COLLECTIONS.solutions, demo.DEMO_SOLUTIONS);
+  write(SOL_COLLECTIONS.components, demo.DEMO_COMPONENTS);
+  write(SOL_COLLECTIONS.routes, demo.DEMO_ROUTES);
+  write(SOL_COLLECTIONS.useCases, demo.DEMO_USE_CASES);
+  write(SOL_COLLECTIONS.resources, demo.DEMO_RESOURCES);
+  write(SOL_COLLECTIONS.documents, demo.DEMO_SOL_DOCUMENTS);
+  write(SOL_COLLECTIONS.assignments, demo.DEMO_ASSIGNMENTS);
+  write(SOL_COLLECTIONS.activities, demo.DEMO_SOL_ACTIVITIES);
+  write(SOL_COLLECTIONS.simulations, demo.DEMO_SIMULATIONS);
+  write(SOL_COLLECTIONS.comparisons, demo.DEMO_COMPARISONS);
 
   await batch.commit();
 }

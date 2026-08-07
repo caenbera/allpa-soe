@@ -39,6 +39,8 @@ import { SlaView } from "@/components/pages/operaciones/SlaView";
 import { ReportesOperativosView } from "@/components/pages/operaciones/ReportesOperativosView";
 import { ReportesProcesosView } from "@/components/pages/operaciones/ReportesProcesosView";
 import { ConfiguracionOperacionesView } from "@/components/pages/operaciones/ConfiguracionView";
+import { SolucionesDashboardView } from "@/components/pages/soluciones/DashboardView";
+import { PlanesPatrimonialesView } from "@/components/pages/soluciones/PlanesPatrimonialesView";
 
 /** Mapa ruta → componente para las páginas internas ya construidas. */
 export const pageRegistry: Record<string, ComponentType> = {
@@ -83,6 +85,9 @@ export const pageRegistry: Record<string, ComponentType> = {
   "/operaciones/reportes-operativos": ReportesOperativosView,
   "/operaciones/reportes-procesos": ReportesProcesosView,
   "/operaciones/configuracion": ConfiguracionOperacionesView,
+
+  "/soluciones/dashboard": SolucionesDashboardView,
+  "/soluciones/planes-patrimoniales": PlanesPatrimonialesView,
 };
 
 /**
@@ -129,4 +134,12 @@ export function contactProfilePath(contactId: string) {
 /** Ruta del checklist de una implementación concreta. */
 export function checklistPath(implementationId: string) {
   return `/operaciones/checklists/${implementationId}`;
+}
+
+/**
+ * Ruta de la ficha de una solución. Va por `slug` y no por el id de Firestore
+ * porque el slug lo escribimos nosotros y sobrevive a una resiembra.
+ */
+export function solutionDetailPath(slug: string) {
+  return `/soluciones/planes-patrimoniales/${slug}`;
 }

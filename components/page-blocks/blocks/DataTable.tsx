@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, ChevronsUpDown, Eye, MoreHorizontal } from "lucide-react";
 import { resolveLucideIcon } from "@/lib/lucide-icon";
 import { Progress } from "@/components/ui/progress";
+import { DotMeter } from "@/components/page-blocks/DotMeter";
 import { Switch } from "@/components/ui/switch";
 import { ScoreRing } from "@/components/page-blocks/blocks/ScoreRing";
 import {
@@ -21,6 +22,8 @@ export type Cell =
   | { kind: "status"; value: string; tone?: BadgeTone }
   | { kind: "person"; name: string; role?: string }
   | { kind: "progress"; value: number; label?: string }
+  /** Medidor de cinco puntos: prioridad, complejidad, liquidez. */
+  | { kind: "dots"; value: number; label?: string; color?: string }
   | { kind: "icons"; icons: string[]; muted?: boolean }
   | { kind: "index"; value: string }
   | { kind: "score"; value: number }
@@ -82,6 +85,8 @@ function sortValue(cell: Cell | undefined): string | number {
   if (!cell) return "";
   switch (cell.kind) {
     case "progress":
+      return cell.value;
+    case "dots":
       return cell.value;
     case "person":
       return cell.name.toLowerCase();
@@ -153,6 +158,8 @@ function CellView({ cell }: { cell: Cell | undefined }) {
           <span className="w-9 text-right text-xs tabular-nums text-white/60">{cell.label ?? `${cell.value}%`}</span>
         </span>
       );
+    case "dots":
+      return <DotMeter level={cell.value} color={cell.color} label={cell.label} size="sm" />;
     case "icons":
       return (
         <span className="flex flex-wrap items-center gap-1">

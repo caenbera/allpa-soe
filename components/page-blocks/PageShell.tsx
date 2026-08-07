@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Star, Share2, Download, MoreHorizontal, Plus, PanelLeftOpen, PanelRightClose } from "lucide-react";
+import Link from "next/link";
+import { Star, Share2, Download, MoreHorizontal, Plus, PanelLeftOpen, PanelRightClose, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/page-blocks/StatusBadge";
 import { BlockSlot, type BlockSlotProps } from "@/components/page-blocks/BlockSlot";
@@ -14,6 +15,7 @@ export function PageShell({
   description,
   icon,
   status,
+  breadcrumb,
   starrable = true,
   headerActions,
   headerAside,
@@ -28,6 +30,11 @@ export function PageShell({
   /** Nombre de icono lucide mostrado junto al título. */
   icon?: string;
   status?: SectionStatus;
+  /**
+   * Migas de pan para las páginas de detalle que cuelgan de otra. El último
+   * elemento es la página actual y no lleva enlace.
+   */
+  breadcrumb?: { label: string; href?: string }[];
   starrable?: boolean;
   /** Sustituye los botones por defecto del encabezado. */
   headerActions?: React.ReactNode;
@@ -52,6 +59,23 @@ export function PageShell({
 
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-6 lg:px-8">
+      {breadcrumb && breadcrumb.length > 0 && (
+        <nav aria-label="Ruta de navegación" className="mb-3 flex flex-wrap items-center gap-1.5 text-sm">
+          {breadcrumb.map((crumb, i) => (
+            <span key={crumb.label} className="flex items-center gap-1.5">
+              {i > 0 && <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-white/25" />}
+              {crumb.href ? (
+                <Link href={crumb.href} className="text-white/45 transition-colors hover:text-white/70">
+                  {crumb.label}
+                </Link>
+              ) : (
+                <span className="text-white/75">{crumb.label}</span>
+              )}
+            </span>
+          ))}
+        </nav>
+      )}
+
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2.5">
@@ -72,7 +96,10 @@ export function PageShell({
           {description && <p className="mt-1.5 max-w-2xl text-sm text-white/50">{description}</p>}
         </div>
 
-        <div className="flex flex-shrink-0 items-center gap-2">
+        {/* En móvil los botones se envuelven; en escritorio conservan su
+            ancho para no comprimir el título. Con cuatro acciones —la ficha de
+            solución— sin `flex-wrap` la página se desbordaba a lo ancho. */}
+        <div className="flex flex-wrap items-center gap-2 lg:flex-shrink-0 lg:justify-end">
           {headerActions ?? (
             <>
               <Button variant="outline" size="sm" className="border-white/12 bg-white/[0.03] text-white/70 hover:bg-white/[0.06]">

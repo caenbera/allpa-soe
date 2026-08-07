@@ -136,7 +136,9 @@ export function SolucionesDashboardView() {
             id: s.slug,
             label: s.name,
             icon: s.icon,
-            value: `${porPlan.get(s.slug)?.progress ?? 0}%`,
+            // El bloque ya pinta el porcentaje al lado de la barra; aquí va
+            // el dato que no se repite.
+            value: `${porPlan.get(s.slug)?.families ?? 0} familias`,
             percent: porPlan.get(s.slug)?.progress ?? 0,
           }))}
         />

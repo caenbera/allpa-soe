@@ -22,6 +22,8 @@ import { MiniMonth } from "@/components/page-blocks/blocks/MiniMonth";
 import { SettingsCardGrid, type SettingsCard } from "@/components/page-blocks/blocks/SettingsCardGrid";
 import { SolutionCardGrid, type SolutionCardData } from "@/components/page-blocks/blocks/SolutionCardGrid";
 import { StepLadder, type LadderStep } from "@/components/page-blocks/blocks/StepLadder";
+import { ComponentPickList, type ComponentPick } from "@/components/page-blocks/blocks/ComponentPickList";
+import { MediaCardGrid, type MediaCardData } from "@/components/page-blocks/blocks/MediaCardGrid";
 import { KpiStrip, type KpiItem } from "@/components/page-blocks/blocks/KpiStrip";
 import { DonutChart, type DonutSlice } from "@/components/page-blocks/blocks/DonutChart";
 import { InfoCard, type InfoRow } from "@/components/page-blocks/blocks/InfoCard";
@@ -263,6 +265,18 @@ export const blockRegistry: Record<BlockType, BlockRegistryEntry> = {
     render: (block) => {
       const steps = (block.config as LadderStep[]) ?? [];
       return steps.length ? <StepLadder steps={steps} showProgress /> : EMPTY_HINT;
+    },
+  },
+  "component-picks": {
+    render: (block) => {
+      const items = (block.config as ComponentPick[]) ?? [];
+      return items.length ? <ComponentPickList items={items} /> : EMPTY_HINT;
+    },
+  },
+  "media-cards": {
+    render: (block) => {
+      const cards = (block.config as MediaCardData[]) ?? [];
+      return cards.length ? <MediaCardGrid cards={cards} /> : EMPTY_HINT;
     },
   },
   "settings-cards": {

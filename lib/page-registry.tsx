@@ -41,6 +41,7 @@ import { ReportesProcesosView } from "@/components/pages/operaciones/ReportesPro
 import { ConfiguracionOperacionesView } from "@/components/pages/operaciones/ConfiguracionView";
 import { SolucionesDashboardView } from "@/components/pages/soluciones/DashboardView";
 import { PlanesPatrimonialesView } from "@/components/pages/soluciones/PlanesPatrimonialesView";
+import { SolucionDetalleView } from "@/components/pages/soluciones/solucion/SolucionDetalleView";
 
 /** Mapa ruta → componente para las páginas internas ya construidas. */
 export const pageRegistry: Record<string, ComponentType> = {
@@ -106,6 +107,10 @@ const dynamicRoutes: { pattern: RegExp; render: (m: RegExpMatchArray) => React.R
   {
     pattern: /^\/operaciones\/checklists\/([A-Za-z0-9_-]+)$/,
     render: (m) => <ChecklistsView implementationId={m[1]} />,
+  },
+  {
+    pattern: /^\/soluciones\/planes-patrimoniales\/([a-z0-9-]+)$/,
+    render: (m) => <SolucionDetalleView slug={m[1]} />,
   },
 ];
 

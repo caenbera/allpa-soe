@@ -58,7 +58,9 @@ export type BlockType =
   | "mini-month"
   | "settings-cards"
   | "solution-cards"
-  | "step-ladder";
+  | "step-ladder"
+  | "component-picks"
+  | "media-cards";
 
 /** Dónde se pinta un bloque dentro de la página. */
 export type BlockPlacement = "main" | "side";
@@ -129,6 +131,8 @@ export const BLOCK_TYPE_CATALOG: BlockTypeDef[] = [
   { type: "file-list", label: "Lista de archivos", description: "Documentos y recursos adjuntos.", icon: "FileText", category: "datos" },
   { type: "asset-progress", label: "Activos con progreso", description: "Tarjetas de activos y su avance.", icon: "Boxes", category: "datos" },
   { type: "solution-cards", label: "Tarjetas de solución", description: "Plan con sus prestaciones, alcance y acceso.", icon: "LayoutGrid", category: "datos" },
+  { type: "component-picks", label: "Lista de componentes", description: "Componentes con su peso, cobertura y si están incluidos.", icon: "Boxes", category: "datos" },
+  { type: "media-cards", label: "Tarjetas con cabecera", description: "Fichas con cabecera de color, etiqueta y métricas al pie.", icon: "Images", category: "datos" },
 
   // Contenido y notas
   { type: "rich-text", label: "Texto enriquecido", description: "Bloque de redacción libre.", icon: "PenLine", category: "contenido" },

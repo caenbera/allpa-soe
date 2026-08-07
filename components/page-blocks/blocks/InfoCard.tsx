@@ -1,4 +1,5 @@
 import { resolveLucideIcon } from "@/lib/lucide-icon";
+import { DotMeter } from "@/components/page-blocks/DotMeter";
 
 export interface InfoRow {
   label: string;
@@ -9,6 +10,9 @@ export interface InfoRow {
   icon?: string;
   /** Muestra el valor con avatar circular de iniciales. */
   person?: boolean;
+  /** Medidor de 1 a 5 antes del valor: complejidad, perfil de riesgo… */
+  dots?: number;
+  dotsColor?: string;
 }
 
 const DOT_TONES = {
@@ -41,6 +45,7 @@ export function InfoCard({ rows }: { rows: InfoRow[] }) {
             <dd className="flex min-w-0 items-center gap-1.5 text-right text-white/85">
               {row.tone && <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${DOT_TONES[row.tone]}`} />}
               {Icon && <Icon className="h-3.5 w-3.5 flex-shrink-0 text-white/45" />}
+              {row.dots != null && <DotMeter level={row.dots} color={row.dotsColor} size="sm" />}
               {row.person && (
                 <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#f5da93] to-[#a9760f] text-[9px] font-bold text-[#241a05]">
                   {initialsOf(row.value)}

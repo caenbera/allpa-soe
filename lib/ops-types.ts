@@ -21,6 +21,7 @@ export const OPS_COLLECTIONS = {
   events: "opsEvents",
   team: "opsTeam",
   slaPolicies: "opsSlaPolicies",
+  savedReports: "opsSavedReports",
 } as const;
 
 export type OpsCollection = (typeof OPS_COLLECTIONS)[keyof typeof OPS_COLLECTIONS];
@@ -306,6 +307,21 @@ export interface SlaPolicy {
   /** 0-100. */
   compliance: number;
   description: string;
+  order: number;
+}
+
+// ── Reportes guardados ─────────────────────────────────────────────────────
+
+export interface SavedReport {
+  id: string;
+  name: string;
+  /** Qué mide: Ejecutivo, Desempeño, SLA, Embudo, Tiempos. */
+  kind: string;
+  icon: string;
+  color: string;
+  generatedAt: string;
+  /** Quién lo dejó programado o lo generó. */
+  author: string;
   order: number;
 }
 

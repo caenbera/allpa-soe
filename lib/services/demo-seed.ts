@@ -16,8 +16,9 @@ import { OPS_COLLECTIONS } from "@/lib/ops-types";
  * 5 → módulo CRM: nodos y aristas del grafo de relaciones.
  * 6 → módulo CRM: más actividades, para que cada pestaña tenga contenido.
  * 7 → módulo Operaciones completo.
+ * 8 → módulo Operaciones: reportes guardados.
  */
-const DEMO_SEED_VERSION = 7;
+const DEMO_SEED_VERSION = 8;
 
 /**
  * Siembra el contenido de demostración en la empresa del super administrador,
@@ -60,6 +61,9 @@ export async function seedDemoContent(companyId: string): Promise<boolean> {
   // El módulo Operaciones llegó en la versión 7.
   if (currentVersion < 7) await seedOps(companyId);
 
+  // Los reportes guardados llegaron en la versión 8.
+  if (currentVersion < 8) await seedOpsSavedReports(companyId);
+
   await updateDoc(companyRef, { demoSeedVersion: DEMO_SEED_VERSION, demoSeeded: true });
   return true;
 }
@@ -86,7 +90,21 @@ async function seedOps(companyId: string) {
   write(OPS_COLLECTIONS.events, demo.DEMO_EVENTS);
   write(OPS_COLLECTIONS.team, demo.DEMO_TEAM);
   write(OPS_COLLECTIONS.slaPolicies, demo.DEMO_SLA_POLICIES);
+  write(OPS_COLLECTIONS.savedReports, demo.DEMO_SAVED_REPORTS);
 
+  await batch.commit();
+}
+
+/** Complemento de la versión 8: reportes guardados, solo si faltan. */
+async function seedOpsSavedReports(companyId: string) {
+  const existing = await getDocs(collection(db, "companies", companyId, OPS_COLLECTIONS.savedReports));
+  if (!existing.empty) return;
+
+  const demo = await import("@/lib/demo-ops");
+  const batch = writeBatch(db);
+  demo.DEMO_SAVED_REPORTS.forEach((row) =>
+    batch.set(doc(collection(db, "companies", companyId, OPS_COLLECTIONS.savedReports)), row)
+  );
   await batch.commit();
 }
 

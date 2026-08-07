@@ -55,7 +55,8 @@ export type BlockType =
   | "phase-checklist"
   | "month-calendar"
   | "time-grid-calendar"
-  | "mini-month";
+  | "mini-month"
+  | "settings-cards";
 
 /** Dónde se pinta un bloque dentro de la página. */
 export type BlockPlacement = "main" | "side";
@@ -133,6 +134,7 @@ export const BLOCK_TYPE_CATALOG: BlockTypeDef[] = [
   { type: "info-card", label: "Ficha de información", description: "Lista de campos y valores.", icon: "ClipboardList", category: "contenido" },
   { type: "media-preview", label: "Vista previa multimedia", description: "Video o audio con reproductor.", icon: "PlayCircle", category: "contenido" },
   { type: "quick-actions", label: "Acciones rápidas", description: "Rejilla de atajos con icono y etiqueta.", icon: "Zap", category: "contenido" },
+  { type: "settings-cards", label: "Tarjetas de configuración", description: "Ajustes agrupados por área, con sus accesos.", icon: "Settings2", category: "contenido" },
   { type: "tag-cloud", label: "Etiquetas", description: "Chips de colores que se agregan y quitan.", icon: "Tags", category: "contenido" },
 
   // Personas y fichas

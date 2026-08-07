@@ -201,6 +201,10 @@ service cloud.firestore {
         allow read: if canReadCompanyData(companyId);
         allow write: if isCompanyMember(companyId);
       }
+      match /opsSavedReports/{docId} {
+        allow read: if canReadCompanyData(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
 
       // Personalización de cada página: características visibles y bloques
       // agregados por el administrador.

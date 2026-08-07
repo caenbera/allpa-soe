@@ -36,6 +36,9 @@ import { CasosEspecialesView } from "@/components/pages/operaciones/CasosEspecia
 import { CalendarioView } from "@/components/pages/operaciones/CalendarioView";
 import { EquipoView } from "@/components/pages/operaciones/EquipoView";
 import { SlaView } from "@/components/pages/operaciones/SlaView";
+import { ReportesOperativosView } from "@/components/pages/operaciones/ReportesOperativosView";
+import { ReportesProcesosView } from "@/components/pages/operaciones/ReportesProcesosView";
+import { ConfiguracionOperacionesView } from "@/components/pages/operaciones/ConfiguracionView";
 
 /** Mapa ruta → componente para las páginas internas ya construidas. */
 export const pageRegistry: Record<string, ComponentType> = {
@@ -77,6 +80,9 @@ export const pageRegistry: Record<string, ComponentType> = {
   "/operaciones/calendario": CalendarioView,
   "/operaciones/equipo": EquipoView,
   "/operaciones/sla-cumplimiento": SlaView,
+  "/operaciones/reportes-operativos": ReportesOperativosView,
+  "/operaciones/reportes-procesos": ReportesProcesosView,
+  "/operaciones/configuracion": ConfiguracionOperacionesView,
 };
 
 /**

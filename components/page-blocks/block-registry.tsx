@@ -19,6 +19,7 @@ import { PhaseChecklist, type ChecklistPhaseData } from "@/components/page-block
 import { MonthCalendar, type CalendarEvent } from "@/components/page-blocks/blocks/MonthCalendar";
 import { TimeGridCalendar } from "@/components/page-blocks/blocks/TimeGridCalendar";
 import { MiniMonth } from "@/components/page-blocks/blocks/MiniMonth";
+import { SettingsCardGrid, type SettingsCard } from "@/components/page-blocks/blocks/SettingsCardGrid";
 import { KpiStrip, type KpiItem } from "@/components/page-blocks/blocks/KpiStrip";
 import { DonutChart, type DonutSlice } from "@/components/page-blocks/blocks/DonutChart";
 import { InfoCard, type InfoRow } from "@/components/page-blocks/blocks/InfoCard";
@@ -248,6 +249,12 @@ export const blockRegistry: Record<BlockType, BlockRegistryEntry> = {
     render: (block) => {
       const actions = (block.config as QuickAction[]) ?? [];
       return actions.length ? <QuickActionGrid actions={actions} /> : EMPTY_HINT;
+    },
+  },
+  "settings-cards": {
+    render: (block) => {
+      const cards = (block.config as SettingsCard[]) ?? [];
+      return cards.length ? <SettingsCardGrid cards={cards} /> : EMPTY_HINT;
     },
   },
   "month-calendar": {

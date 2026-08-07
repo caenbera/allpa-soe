@@ -20,6 +20,7 @@ import type {
   OpsSignature,
   OpsSpecialCase,
   OpsTask,
+  SavedReport,
   SlaPolicy,
 } from "@/lib/ops-types";
 
@@ -452,3 +453,21 @@ export const DEMO_SLA_POLICIES: Omit<SlaPolicy, "id">[] = [
   { name: "Política de seguridad", compliance: 98, description: "La información sensible se comparte solo por canales cifrados.", order: 4 },
   { name: "Política de escalamiento", compliance: 88, description: "Todo caso detenido más de 72 horas se escala a un coordinador.", order: 5 },
 ];
+
+// ── Reportes guardados ─────────────────────────────────────────────────────
+
+export const DEMO_SAVED_REPORTS: Omit<SavedReport, "id">[] = [
+  ["Resumen Ejecutivo Mensual", "Ejecutivo", "FileText", "#a78bfa", "Carlos Bermeo", -1],
+  ["Desempeño por Asesor", "Desempeño", "Users", "#22c55e", "Luis Navarro", -1],
+  ["SLA y Cumplimiento", "SLA", "ShieldCheck", "#3b82f6", "María Pérez", -2],
+  ["Embudo de Procesos", "Embudo", "Filter", "#e0a836", "Carlos Bermeo", -3],
+  ["Tiempos de Resolución", "Tiempos", "Clock", "#f472b6", "Diego Martínez", -7],
+].map(([name, kind, icon, color, author, offset], i) => ({
+  name: name as string,
+  kind: kind as string,
+  icon: icon as string,
+  color: color as string,
+  author: author as string,
+  generatedAt: label(offset as number),
+  order: i,
+}));

@@ -46,6 +46,8 @@ import { RutasClienteView } from "@/components/pages/soluciones/RutasClienteView
 import { ComponentesCatalogoView } from "@/components/pages/soluciones/ComponentesView";
 import { CasosDeUsoView } from "@/components/pages/soluciones/CasosDeUsoView";
 import { BibliotecaView } from "@/components/pages/soluciones/BibliotecaView";
+import { CalculadoraView } from "@/components/pages/soluciones/CalculadoraView";
+import { ComparadorView } from "@/components/pages/soluciones/ComparadorView";
 
 /** Mapa ruta → componente para las páginas internas ya construidas. */
 export const pageRegistry: Record<string, ComponentType> = {
@@ -97,6 +99,8 @@ export const pageRegistry: Record<string, ComponentType> = {
   "/soluciones/componentes": ComponentesCatalogoView,
   "/soluciones/casos-de-uso": CasosDeUsoView,
   "/soluciones/biblioteca": BibliotecaView,
+  "/soluciones/calculadora": CalculadoraView,
+  "/soluciones/comparador": ComparadorView,
 };
 
 /**

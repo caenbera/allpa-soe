@@ -25,6 +25,8 @@ import { StepLadder, type LadderStep } from "@/components/page-blocks/blocks/Ste
 import { ComponentPickList, type ComponentPick } from "@/components/page-blocks/blocks/ComponentPickList";
 import { MediaCardGrid, type MediaCardData } from "@/components/page-blocks/blocks/MediaCardGrid";
 import { NavTileGrid, type NavTile } from "@/components/page-blocks/blocks/NavTileGrid";
+import { ComparisonTable, type ComparisonColumn, type ComparisonRow } from "@/components/page-blocks/blocks/ComparisonTable";
+import { ParameterForm, type ParameterField } from "@/components/page-blocks/blocks/ParameterForm";
 import { KpiStrip, type KpiItem } from "@/components/page-blocks/blocks/KpiStrip";
 import { DonutChart, type DonutSlice } from "@/components/page-blocks/blocks/DonutChart";
 import { InfoCard, type InfoRow } from "@/components/page-blocks/blocks/InfoCard";
@@ -95,6 +97,17 @@ function StandaloneFilterToolbar({ config }: { config: { placeholder?: string; f
       onFilterChange={(id, value) => setValues((prev) => ({ ...prev, [id]: value }))}
     />
   );
+}
+
+/**
+ * El formulario de parámetros es controlado. Cuando se agrega suelto desde el
+ * selector no hay página que le lleve el estado, así que se lo damos aquí para
+ * que al menos se pueda trastear con él.
+ */
+function StandaloneParameterForm({ fields }: { fields: ParameterField[] }) {
+  const [valores, setValores] = useState<Record<string, string | number>>({});
+  const actuales = fields.map((f) => (valores[f.id] !== undefined ? { ...f, value: valores[f.id] } : f)) as ParameterField[];
+  return <ParameterForm fields={actuales} onChange={(id, value) => setValores((prev) => ({ ...prev, [id]: value }))} />;
 }
 
 function StandaloneWeekStrip({ weeks }: { weeks: WeekChip[] }) {
@@ -284,6 +297,18 @@ export const blockRegistry: Record<BlockType, BlockRegistryEntry> = {
     render: (block) => {
       const tiles = (block.config as NavTile[]) ?? [];
       return tiles.length ? <NavTileGrid tiles={tiles} /> : EMPTY_HINT;
+    },
+  },
+  "comparison-table": {
+    render: (block) => {
+      const cfg = block.config as { columns: ComparisonColumn[]; rows: ComparisonRow[] } | null;
+      return cfg?.columns?.length ? <ComparisonTable columns={cfg.columns} rows={cfg.rows ?? []} /> : EMPTY_HINT;
+    },
+  },
+  "parameter-form": {
+    render: (block) => {
+      const fields = (block.config as ParameterField[]) ?? [];
+      return fields.length ? <StandaloneParameterForm fields={fields} /> : EMPTY_HINT;
     },
   },
   "settings-cards": {

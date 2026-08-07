@@ -61,7 +61,9 @@ export type BlockType =
   | "step-ladder"
   | "component-picks"
   | "media-cards"
-  | "nav-tiles";
+  | "nav-tiles"
+  | "parameter-form"
+  | "comparison-table";
 
 /** Dónde se pinta un bloque dentro de la página. */
 export type BlockPlacement = "main" | "side";
@@ -135,6 +137,7 @@ export const BLOCK_TYPE_CATALOG: BlockTypeDef[] = [
   { type: "component-picks", label: "Lista de componentes", description: "Componentes con su peso, cobertura y si están incluidos.", icon: "Boxes", category: "datos" },
   { type: "media-cards", label: "Tarjetas con cabecera", description: "Fichas con cabecera de color, etiqueta y métricas al pie.", icon: "Images", category: "datos" },
   { type: "nav-tiles", label: "Baldosas de navegación", description: "Accesos con icono, subtítulo y conteo.", icon: "LayoutGrid", category: "datos" },
+  { type: "comparison-table", label: "Matriz de comparación", description: "Atributos en filas y opciones en columnas.", icon: "Columns3", category: "datos" },
 
   // Contenido y notas
   { type: "rich-text", label: "Texto enriquecido", description: "Bloque de redacción libre.", icon: "PenLine", category: "contenido" },
@@ -143,6 +146,7 @@ export const BLOCK_TYPE_CATALOG: BlockTypeDef[] = [
   { type: "info-card", label: "Ficha de información", description: "Lista de campos y valores.", icon: "ClipboardList", category: "contenido" },
   { type: "media-preview", label: "Vista previa multimedia", description: "Video o audio con reproductor.", icon: "PlayCircle", category: "contenido" },
   { type: "quick-actions", label: "Acciones rápidas", description: "Rejilla de atajos con icono y etiqueta.", icon: "Zap", category: "contenido" },
+  { type: "parameter-form", label: "Formulario de parámetros", description: "Campos de simulación: desplegables, importes y tramos.", icon: "SlidersHorizontal", category: "contenido" },
   { type: "settings-cards", label: "Tarjetas de configuración", description: "Ajustes agrupados por área, con sus accesos.", icon: "Settings2", category: "contenido" },
   { type: "tag-cloud", label: "Etiquetas", description: "Chips de colores que se agregan y quitan.", icon: "Tags", category: "contenido" },
 

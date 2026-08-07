@@ -133,8 +133,8 @@ export const defaultSidebarBlocks: DefaultBlockConfig[] = [
       { slug: "casos-de-uso", name: "Casos de Uso", icon: "Lightbulb", built: true },
       { slug: "calculadora", name: "Calculadora", icon: "Calculator", built: true },
       { slug: "comparador", name: "Comparador", icon: "Scale", built: true },
-      { slug: "analitica", name: "Analítica", icon: "LineChart", built: false },
-      { slug: "configuracion", name: "Configuración", icon: "Settings", built: false },
+      { slug: "analitica", name: "Analítica", icon: "LineChart", built: true },
+      { slug: "configuracion", name: "Configuración", icon: "Settings", built: true },
     ],
   },
   { slug: "ventas", name: "Ventas", icon: "ShoppingCart", pages: [] },
@@ -167,5 +167,10 @@ export const defaultSidebarBlocks: DefaultBlockConfig[] = [
   { slug: "finanzas", name: "Finanzas", icon: "Landmark", pages: [] },
   { slug: "analitica", name: "Analítica", icon: "LineChart", pages: [] },
   { slug: "automatizaciones", name: "Automatizaciones", icon: "Workflow", pages: [] },
-  { slug: "configuracion", name: "Configuración", icon: "Settings", pages: [] },
+  {
+    slug: "configuracion",
+    name: "Configuración",
+    icon: "Settings",
+    pages: [{ slug: "general", name: "General", icon: "SlidersHorizontal", built: true }],
+  },
 ];

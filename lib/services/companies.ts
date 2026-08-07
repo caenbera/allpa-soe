@@ -71,6 +71,21 @@ export async function getCompany(companyId: string): Promise<Company | null> {
   } as Company;
 }
 
+/**
+ * Los miembros de una empresa, para el panel de configuración.
+ *
+ * `joinedAt` se escribe con `serverTimestamp()`, así que vuelve como
+ * `Timestamp` y hay que pasarlo a milisegundos: sin esto la fecha de alta
+ * salía como "Invalid Date".
+ */
+export async function listCompanyMembers(companyId: string): Promise<CompanyMember[]> {
+  const snap = await getDocs(collection(db, "companies", companyId, "members"));
+  return snap.docs.map((d) => {
+    const data = d.data();
+    return { ...data, uid: d.id, joinedAt: toMillis(data.joinedAt) } as CompanyMember;
+  });
+}
+
 export async function listCompaniesByOwner(ownerUid: string): Promise<Company[]> {
   const q = query(collection(db, "companies"), where("ownerUid", "==", ownerUid));
   const snap = await getDocs(q);

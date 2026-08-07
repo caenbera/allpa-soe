@@ -42,6 +42,10 @@ import { ConfiguracionOperacionesView } from "@/components/pages/operaciones/Con
 import { SolucionesDashboardView } from "@/components/pages/soluciones/DashboardView";
 import { PlanesPatrimonialesView } from "@/components/pages/soluciones/PlanesPatrimonialesView";
 import { SolucionDetalleView } from "@/components/pages/soluciones/solucion/SolucionDetalleView";
+import { RutasClienteView } from "@/components/pages/soluciones/RutasClienteView";
+import { ComponentesCatalogoView } from "@/components/pages/soluciones/ComponentesView";
+import { CasosDeUsoView } from "@/components/pages/soluciones/CasosDeUsoView";
+import { BibliotecaView } from "@/components/pages/soluciones/BibliotecaView";
 
 /** Mapa ruta → componente para las páginas internas ya construidas. */
 export const pageRegistry: Record<string, ComponentType> = {
@@ -89,6 +93,10 @@ export const pageRegistry: Record<string, ComponentType> = {
 
   "/soluciones/dashboard": SolucionesDashboardView,
   "/soluciones/planes-patrimoniales": PlanesPatrimonialesView,
+  "/soluciones/rutas-de-cliente": RutasClienteView,
+  "/soluciones/componentes": ComponentesCatalogoView,
+  "/soluciones/casos-de-uso": CasosDeUsoView,
+  "/soluciones/biblioteca": BibliotecaView,
 };
 
 /**

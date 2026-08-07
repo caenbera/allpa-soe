@@ -24,6 +24,7 @@ import { SolutionCardGrid, type SolutionCardData } from "@/components/page-block
 import { StepLadder, type LadderStep } from "@/components/page-blocks/blocks/StepLadder";
 import { ComponentPickList, type ComponentPick } from "@/components/page-blocks/blocks/ComponentPickList";
 import { MediaCardGrid, type MediaCardData } from "@/components/page-blocks/blocks/MediaCardGrid";
+import { NavTileGrid, type NavTile } from "@/components/page-blocks/blocks/NavTileGrid";
 import { KpiStrip, type KpiItem } from "@/components/page-blocks/blocks/KpiStrip";
 import { DonutChart, type DonutSlice } from "@/components/page-blocks/blocks/DonutChart";
 import { InfoCard, type InfoRow } from "@/components/page-blocks/blocks/InfoCard";
@@ -277,6 +278,12 @@ export const blockRegistry: Record<BlockType, BlockRegistryEntry> = {
     render: (block) => {
       const cards = (block.config as MediaCardData[]) ?? [];
       return cards.length ? <MediaCardGrid cards={cards} /> : EMPTY_HINT;
+    },
+  },
+  "nav-tiles": {
+    render: (block) => {
+      const tiles = (block.config as NavTile[]) ?? [];
+      return tiles.length ? <NavTileGrid tiles={tiles} /> : EMPTY_HINT;
     },
   },
   "settings-cards": {

@@ -60,7 +60,8 @@ export type BlockType =
   | "solution-cards"
   | "step-ladder"
   | "component-picks"
-  | "media-cards";
+  | "media-cards"
+  | "nav-tiles";
 
 /** Dónde se pinta un bloque dentro de la página. */
 export type BlockPlacement = "main" | "side";
@@ -133,6 +134,7 @@ export const BLOCK_TYPE_CATALOG: BlockTypeDef[] = [
   { type: "solution-cards", label: "Tarjetas de solución", description: "Plan con sus prestaciones, alcance y acceso.", icon: "LayoutGrid", category: "datos" },
   { type: "component-picks", label: "Lista de componentes", description: "Componentes con su peso, cobertura y si están incluidos.", icon: "Boxes", category: "datos" },
   { type: "media-cards", label: "Tarjetas con cabecera", description: "Fichas con cabecera de color, etiqueta y métricas al pie.", icon: "Images", category: "datos" },
+  { type: "nav-tiles", label: "Baldosas de navegación", description: "Accesos con icono, subtítulo y conteo.", icon: "LayoutGrid", category: "datos" },
 
   // Contenido y notas
   { type: "rich-text", label: "Texto enriquecido", description: "Bloque de redacción libre.", icon: "PenLine", category: "contenido" },
